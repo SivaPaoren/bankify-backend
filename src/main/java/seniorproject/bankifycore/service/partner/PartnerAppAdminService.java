@@ -140,6 +140,12 @@ public class PartnerAppAdminService {
         r.setStatus(RotationStatus.APPROVED);
         rotationRepo.save(r);
 
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "PARTNER_ROTATION_APPROVED",
+                "PartnerApp", app.getId().toString(),
+                "reason=admin_approve_rotation");
+
         return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name(), apiKeyPlain);
     }
 
@@ -154,6 +160,13 @@ public class PartnerAppAdminService {
 
         r.setStatus(RotationStatus.REJECTED);
         rotationRepo.save(r);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "PARTNER_ROTATION_REJECTED",
+                "PartnerApp", r.getPartnerApp().getId().toString(),
+                "reason=admin_reject_rotation");
+
         return new RejectRotationResponse(r.getId(), r.getStatus().name());
     }
 

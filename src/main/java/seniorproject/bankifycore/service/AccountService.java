@@ -68,6 +68,14 @@ public class AccountService {
                 .build();
 
         Account savedAccount = accountRepo.save(account);
+
+        // Audit Log
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "ACCOUNT_CREATED",
+                "Account", savedAccount.getId().toString(),
+                "reason=admin_CREATED");
+
         return toResponse(savedAccount);
     }
 
@@ -98,11 +106,26 @@ public class AccountService {
         Account saved = accountRepo.save(account);
 
         // audit log is done here
+        String action = "ACCOUNT_UPDATED";
+        String reason = "admin_UPDATED";
+
+        if (req.status() == AccountStatus.ACTIVE) {
+            action = "ACCOUNT_REACTIVATED";
+            reason = "admin_REACTIVATED";
+        } else if (req.status() == AccountStatus.FROZEN) {
+            action = "ACCOUNT_FROZEN";
+            reason = "admin_FROZEN";
+        } else if (req.status() == AccountStatus.CLOSED) {
+            action = "ACCOUNT_CLOSED";
+            reason = "admin_CLOSED";
+        }
+
+        // audit log is done here
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "ACCOUNT_UPDATED",
+                action,
                 "Account", account.getId().toString(),
-                "reason=admin_" + req.status());
+                "reason=" + reason);
 
         return toResponse(saved);
     }
@@ -119,9 +142,9 @@ public class AccountService {
         // audit log is done here
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "ACCOUNT_DISABLED",
+                "ACCOUNT_FROZEN",
                 "Account", account.getId().toString(),
-                "reason=admin_disable");
+                "reason=admin_FROZEN");
         return toResponse(account);
     }
 

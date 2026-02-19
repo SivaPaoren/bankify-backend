@@ -14,6 +14,7 @@ import seniorproject.bankifycore.dto.customer.CustomerResponse;
 import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.CustomerRepository;
 import seniorproject.bankifycore.utils.EnumMapper;
+import seniorproject.bankifycore.utils.ActorContext;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -25,6 +26,8 @@ public class CustomerService {
 
     private final CustomerRepository customerRepo;
     private final AccountRepository accountRepo;
+    private final AuditService auditService;
+
 
     // ── Read ─────────────────────────────────────────────────────────────────
 
@@ -56,6 +59,13 @@ public class CustomerService {
                 .build();
 
         customerRepo.save(customer);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_CREATED",
+                "Customer", customer.getId().toString(),
+                "reason=admin_CREATED");
+
         return toResponse(customer);
     }
 
@@ -76,6 +86,13 @@ public class CustomerService {
         }
 
         Customer saved = customerRepo.save(customer);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_UPDATED",
+                "Customer", saved.getId().toString(),
+                "reason=admin_UPDATED");
+
         return toResponse(saved);
     }
 
@@ -88,6 +105,13 @@ public class CustomerService {
         customer.setStatus(CustomerStatus.FROZEN);
         customerRepo.save(customer);
         cascadeAccountStatus(id, CustomerStatus.FROZEN);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_FROZEN",
+                "Customer", customer.getId().toString(),
+                "reason=admin_FROZEN");
+
         return toResponse(customer);
     }
 
@@ -100,6 +124,13 @@ public class CustomerService {
         customer.setStatus(CustomerStatus.ACTIVE);
         customerRepo.save(customer);
         cascadeAccountStatus(id, CustomerStatus.ACTIVE);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_REACTIVATED",
+                "Customer", customer.getId().toString(),
+                "reason=admin_REACTIVATED");
+
         return toResponse(customer);
     }
 
@@ -114,6 +145,12 @@ public class CustomerService {
         List<Account> accounts = accountRepo.findByCustomer_Id(id);
         accounts.forEach(a -> a.setStatus(AccountStatus.CLOSED));
         accountRepo.saveAll(accounts);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_CLOSED",
+                "Customer", customer.getId().toString(),
+                "reason=admin_CLOSED");
 
         return toResponse(customer);
     }
