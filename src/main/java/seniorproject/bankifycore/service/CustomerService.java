@@ -143,7 +143,14 @@ public class CustomerService {
 
         // Close ALL accounts regardless of current status
         List<Account> accounts = accountRepo.findByCustomer_Id(id);
-        accounts.forEach(a -> a.setStatus(AccountStatus.CLOSED));
+        accounts.forEach(a -> {
+            a.setStatus(AccountStatus.CLOSED);
+            auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "ACCOUNT_CLOSE",
+                "Account", a.getId().toString(),
+                "reason=customer_closed");
+        });
         accountRepo.saveAll(accounts);
 
         auditService.log(
@@ -168,12 +175,26 @@ public class CustomerService {
         if (newStatus == CustomerStatus.FROZEN) {
             accounts.stream()
                     .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
-                    .forEach(a -> a.setStatus(AccountStatus.FROZEN));
+                    .forEach(a -> {
+                        a.setStatus(AccountStatus.FROZEN);
+                        auditService.log(
+                            ActorContext.actorType(), ActorContext.actorId(),
+                            "ACCOUNT_FREEZE",
+                            "Account", a.getId().toString(),
+                            "reason=customer_frozen");
+                    });
             accountRepo.saveAll(accounts);
         } else if (newStatus == CustomerStatus.ACTIVE) {
             accounts.stream()
                     .filter(a -> a.getStatus() == AccountStatus.FROZEN)
-                    .forEach(a -> a.setStatus(AccountStatus.ACTIVE));
+                    .forEach(a -> {
+                        a.setStatus(AccountStatus.ACTIVE);
+                        auditService.log(
+                            ActorContext.actorType(), ActorContext.actorId(),
+                            "ACCOUNT_REACTIVATE",
+                            "Account", a.getId().toString(),
+                            "reason=customer_reactivated");
+                    });
             accountRepo.saveAll(accounts);
         }
     }
