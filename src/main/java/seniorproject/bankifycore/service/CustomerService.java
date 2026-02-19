@@ -3,12 +3,15 @@ package seniorproject.bankifycore.service;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
+import seniorproject.bankifycore.domain.Account;
 import seniorproject.bankifycore.domain.Customer;
+import seniorproject.bankifycore.domain.enums.AccountStatus;
 import seniorproject.bankifycore.domain.enums.CustomerStatus;
 import seniorproject.bankifycore.domain.enums.CustomerType;
 import seniorproject.bankifycore.dto.customer.CreateCustomerRequest;
 import seniorproject.bankifycore.dto.customer.UpdateCustomerRequest;
 import seniorproject.bankifycore.dto.customer.CustomerResponse;
+import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.CustomerRepository;
 import seniorproject.bankifycore.utils.EnumMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ import java.util.UUID;
 public class CustomerService {
 
     private final CustomerRepository customerRepo;
+    private final AccountRepository accountRepo;
 
     // Get all the list of customers
     public List<CustomerResponse> getCustomers() {
@@ -67,24 +71,32 @@ public class CustomerService {
     public CustomerResponse updateCustomer(UUID id, UpdateCustomerRequest req) {
         Customer customer = byId(id);
 
-        if (req.firstName() != null) {
-            customer.setFirstName(req.firstName());
-        }
-
-        if (req.lastName() != null) {
-            customer.setLastName(req.lastName());
-        }
-
-        if (req.phone() != null) {
-            customer.setPhoneNumber(req.phone());
-        }
+        if (req.firstName() != null) customer.setFirstName(req.firstName());
+        if (req.lastName() != null)  customer.setLastName(req.lastName());
+        if (req.phone() != null)     customer.setPhoneNumber(req.phone());
 
         if (req.status() != null) {
-            customer.setStatus(EnumMapper.toEnum(CustomerStatus.class, req.status()));
+            CustomerStatus newStatus = EnumMapper.toEnum(CustomerStatus.class, req.status());
+            customer.setStatus(newStatus);
+
+            // ── Cascade to accounts ──────────────────────────────────────────
+            List<Account> accounts = accountRepo.findByCustomer_Id(id);
+            if (newStatus == CustomerStatus.FROZEN) {
+                // Freeze all ACTIVE accounts — frozen customer cannot transact
+                accounts.stream()
+                        .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
+                        .forEach(a -> a.setStatus(AccountStatus.FROZEN));
+                accountRepo.saveAll(accounts);
+            } else if (newStatus == CustomerStatus.ACTIVE) {
+                // Re-activate all FROZEN accounts when customer is re-enabled
+                accounts.stream()
+                        .filter(a -> a.getStatus() == AccountStatus.FROZEN)
+                        .forEach(a -> a.setStatus(AccountStatus.ACTIVE));
+                accountRepo.saveAll(accounts);
+            }
         }
 
         Customer saved = customerRepo.save(customer);
-
         return toResponse(saved);
     }
 
@@ -92,10 +104,17 @@ public class CustomerService {
     public CustomerResponse disable(UUID id) {
         Customer customer = customerRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Customer cannot be disabled , because customer is not found"));
+                        "Customer cannot be disabled, because customer is not found"));
 
         customer.setStatus(CustomerStatus.FROZEN);
         customerRepo.save(customer);
+
+        // ── Cascade: freeze all ACTIVE accounts of this customer ─────────
+        List<Account> accounts = accountRepo.findByCustomer_Id(id);
+        accounts.stream()
+                .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
+                .forEach(a -> a.setStatus(AccountStatus.FROZEN));
+        accountRepo.saveAll(accounts);
 
         return toResponse(customer);
     }
