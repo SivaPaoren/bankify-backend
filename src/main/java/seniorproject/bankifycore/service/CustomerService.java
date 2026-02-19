@@ -62,9 +62,9 @@ public class CustomerService {
 
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "CUSTOMER_CREATED",
+                "CUSTOMER_CREATE",
                 "Customer", customer.getId().toString(),
-                "reason=admin_CREATED");
+                "reason=admin_Create");
 
         return toResponse(customer);
     }
@@ -89,9 +89,9 @@ public class CustomerService {
 
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "CUSTOMER_UPDATED",
+                "CUSTOMER_UPDATE",
                 "Customer", saved.getId().toString(),
-                "reason=admin_UPDATED");
+                "reason=admin_Update");
 
         return toResponse(saved);
     }
@@ -108,9 +108,9 @@ public class CustomerService {
 
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "CUSTOMER_FROZEN",
+                "CUSTOMER_FREEZE",
                 "Customer", customer.getId().toString(),
-                "reason=admin_FROZEN");
+                "reason=admin_Freeze");
 
         return toResponse(customer);
     }
@@ -127,9 +127,9 @@ public class CustomerService {
 
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "CUSTOMER_REACTIVATED",
+                "CUSTOMER_REACTIVATE",
                 "Customer", customer.getId().toString(),
-                "reason=admin_REACTIVATED");
+                "reason=admin_Reactivate");
 
         return toResponse(customer);
     }
@@ -148,9 +148,9 @@ public class CustomerService {
 
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "CUSTOMER_CLOSED",
+                "CUSTOMER_CLOSE",
                 "Customer", customer.getId().toString(),
-                "reason=admin_CLOSED");
+                "reason=admin_Close");
 
         return toResponse(customer);
     }
