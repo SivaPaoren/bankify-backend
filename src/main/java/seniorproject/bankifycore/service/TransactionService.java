@@ -75,7 +75,7 @@ public class TransactionService {
             // ✅ audit only when NEW transaction is created
             auditService.log(
                     ActorContext.actorType(), ActorContext.actorId(),
-                    "TX_CREATED",
+                    "TRANSACTION_DEPOSIT",
                     "Transaction", saved.getId().toString(),
                     "type=" + saved.getType()
                             + ",amount=" + saved.getAmount()
@@ -134,7 +134,7 @@ public class TransactionService {
             // audit log is done here
             auditService.log(
                     ActorContext.actorType(), ActorContext.actorId(),
-                    "TX_CREATED",
+                    "TRANSACTION_WITHDRAW",
                     "Transaction", saved.getId().toString(),
                     "type=" + saved.getType()
                             + ",amount=" + saved.getAmount()
@@ -205,7 +205,7 @@ public class TransactionService {
             auditService.log(
                     ActorContext.actorType(),
                     ActorContext.actorId(),
-                    "TX_CREATED",
+                    "TRANSACTION_TRANSFER",
                     "Transaction",
                     saved.getId().toString(),
                     "type=" + saved.getType()

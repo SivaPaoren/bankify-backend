@@ -24,6 +24,7 @@ public class AdminAuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
+    private final seniorproject.bankifycore.service.AuditService auditService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -43,6 +44,13 @@ public class AdminAuthController {
         }
 
         String token = jwtTokenService.generateToken(user);
+
+        // Audit Log
+        auditService.log(
+                "USER", user.getId().toString(),
+                "USER_LOGIN",
+                "User", user.getId().toString(),
+                "email=" + user.getEmail());
 
         LoginResponse response = new LoginResponse(
                 token,
