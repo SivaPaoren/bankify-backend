@@ -194,10 +194,13 @@ public class AccountService {
 
         UUID customerId = (account.getCustomer() == null) ? null : account.getCustomer().getId();
         UUID partnerAppId = (account.getPartnerApp() == null) ? null : account.getPartnerApp().getId();
+        String customerName = (account.getCustomer() == null) ? null
+                : account.getCustomer().getFirstName() + " " + account.getCustomer().getLastName();
 
         return new AccountResponse(
                 account.getId(),
                 customerId,
+                customerName,
                 partnerAppId,
                 account.getAccountNumber(),
                 account.getType(),
