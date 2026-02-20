@@ -8,7 +8,6 @@ import seniorproject.bankifycore.dto.admin.LoginResponse;
 import seniorproject.bankifycore.repository.UserRepository;
 import seniorproject.bankifycore.security.JwtTokenService;
 import jakarta.validation.Valid;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
