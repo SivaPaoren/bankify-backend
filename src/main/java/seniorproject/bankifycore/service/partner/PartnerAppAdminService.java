@@ -12,6 +12,7 @@ import seniorproject.bankifycore.dto.admin.ApprovePartnerResponse;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
+import seniorproject.bankifycore.dto.rotation.AdminRotationRequestItem;
 import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.PartnerAppRepository;
 import seniorproject.bankifycore.repository.RotationRepository;
@@ -110,6 +111,20 @@ public class PartnerAppAdminService {
                 "status=" + app.getStatus().name());
 
         return new ApprovePartnerResponse(app.getId(), app.getStatus().name(), apiKeyPlain);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminRotationRequestItem> listRotationRequests() {
+        return rotationRepo.findAll().stream()
+                .filter(r -> r.getStatus() == RotationStatus.PENDING)
+                .map(r -> new AdminRotationRequestItem(
+                        r.getId(),
+                        r.getPartnerApp().getId(),
+                        r.getPartnerApp().getName(),
+                        r.getStatus().name(),
+                        r.getReason(),
+                        r.getCreatedAt()))
+                .toList();
     }
 
     // Here is the method that will approve , Rotation for partner
