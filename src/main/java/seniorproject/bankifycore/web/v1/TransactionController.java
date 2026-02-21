@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(ApiPaths.TRANSACTIONS)
-@PreAuthorize("hasRole('ATM')")
+@PreAuthorize("hasRole('ADMIN')")
 public class TransactionController {
 
     private final TransactionService transactionService;

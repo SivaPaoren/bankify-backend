@@ -68,6 +68,14 @@ public class AccountService {
                 .build();
 
         Account savedAccount = accountRepo.save(account);
+
+        // Audit Log
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "ACCOUNT_CREATE",
+                "Account", savedAccount.getId().toString(),
+                "reason=admin_Create");
+
         return toResponse(savedAccount);
     }
 
@@ -98,11 +106,26 @@ public class AccountService {
         Account saved = accountRepo.save(account);
 
         // audit log is done here
+        String action = "ACCOUNT_UPDATE";
+        String reason = "admin_Update";
+
+        if (req.status() == AccountStatus.ACTIVE) {
+            action = "ACCOUNT_REACTIVATE";
+            reason = "admin_Reactivate";
+        } else if (req.status() == AccountStatus.FROZEN) {
+            action = "ACCOUNT_FREEZE";
+            reason = "admin_Freeze";
+        } else if (req.status() == AccountStatus.CLOSED) {
+            action = "ACCOUNT_CLOSE";
+            reason = "admin_Close";
+        }
+
+        // audit log is done here
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "ACCOUNT_UPDATED",
+                action,
                 "Account", account.getId().toString(),
-                "reason=admin_" + req.status());
+                "reason=" + reason);
 
         return toResponse(saved);
     }
@@ -119,9 +142,9 @@ public class AccountService {
         // audit log is done here
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "ACCOUNT_DISABLED",
+                "ACCOUNT_FREEZE",
                 "Account", account.getId().toString(),
-                "reason=admin_disable");
+                "reason=admin_Freeze");
         return toResponse(account);
     }
 
@@ -194,10 +217,13 @@ public class AccountService {
 
         UUID customerId = (account.getCustomer() == null) ? null : account.getCustomer().getId();
         UUID partnerAppId = (account.getPartnerApp() == null) ? null : account.getPartnerApp().getId();
+        String customerName = (account.getCustomer() == null) ? null
+                : account.getCustomer().getFirstName() + " " + account.getCustomer().getLastName();
 
         return new AccountResponse(
                 account.getId(),
                 customerId,
+                customerName,
                 partnerAppId,
                 account.getAccountNumber(),
                 account.getType(),

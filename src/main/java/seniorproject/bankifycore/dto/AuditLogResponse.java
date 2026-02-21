@@ -1,13 +1,15 @@
 package seniorproject.bankifycore.dto;
 
 import jakarta.persistence.Column;
+import java.time.Instant;
 
 public record AuditLogResponse(
-        String actorType, // USER / ATM / PARTNER
-        String actorId,  // UUID as string (userId/accountId/partnerAppId)
-        String action,    // e.g. Partner_APPROVED, PIN_RESET, TX_DEPOSIT
-        String entityType, // e.g. partnerApp, Account, Transaction
+        Instant createdAt,        // When the event happened
+        String actorType,         // USER / ATM / PARTNER
+        String actorId,           // email / UUID of the actor
+        String action,            // e.g. ACCOUNT_UPDATED, PIN_RESET
+        String entityType,        // e.g. Account, Transaction
         String entityId,
-        String details // json-ish string ok
+        String details            // e.g reason=admin_FROZEN
 ) {
 }

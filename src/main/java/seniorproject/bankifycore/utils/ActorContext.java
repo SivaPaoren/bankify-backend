@@ -20,7 +20,12 @@ public class ActorContext {
     public static String actorId() {
         Authentication a = SecurityContextHolder.getContext().getAuthentication();
         if (a == null || a.getPrincipal() == null) return "SYSTEM";
-        return String.valueOf(a.getPrincipal()); // UUID toString in your filters
+        Object principal = a.getPrincipal();
+        // Extract username cleanly, avoiding toString() which gives BankifyUserDetails@hashcode
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            return ud.getUsername();
+        }
+        return String.valueOf(principal);
     }
 
 
