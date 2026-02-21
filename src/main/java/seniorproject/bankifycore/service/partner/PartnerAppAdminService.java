@@ -12,6 +12,7 @@ import seniorproject.bankifycore.dto.admin.ApprovePartnerResponse;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
+import seniorproject.bankifycore.dto.rotation.AdminRotationRequestItem;
 import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.PartnerAppRepository;
 import seniorproject.bankifycore.repository.RotationRepository;
@@ -112,6 +113,20 @@ public class PartnerAppAdminService {
         return new ApprovePartnerResponse(app.getId(), app.getStatus().name(), apiKeyPlain);
     }
 
+    @Transactional(readOnly = true)
+    public List<AdminRotationRequestItem> listRotationRequests() {
+        return rotationRepo.findAll().stream()
+                .filter(r -> r.getStatus() == RotationStatus.PENDING)
+                .map(r -> new AdminRotationRequestItem(
+                        r.getId(),
+                        r.getPartnerApp().getId(),
+                        r.getPartnerApp().getName(),
+                        r.getStatus().name(),
+                        r.getReason(),
+                        r.getCreatedAt()))
+                .toList();
+    }
+
     // Here is the method that will approve , Rotation for partner
     @Transactional
     public ApproveRotationResponse approveRotation(UUID requestId) {
@@ -140,6 +155,12 @@ public class PartnerAppAdminService {
         r.setStatus(RotationStatus.APPROVED);
         rotationRepo.save(r);
 
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "PARTNER_ROTATION_APPROVED",
+                "PartnerApp", app.getId().toString(),
+                "reason=admin_approve_rotation");
+
         return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name(), apiKeyPlain);
     }
 
@@ -154,6 +175,13 @@ public class PartnerAppAdminService {
 
         r.setStatus(RotationStatus.REJECTED);
         rotationRepo.save(r);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "PARTNER_ROTATION_REJECTED",
+                "PartnerApp", r.getPartnerApp().getId().toString(),
+                "reason=admin_reject_rotation");
+
         return new RejectRotationResponse(r.getId(), r.getStatus().name());
     }
 

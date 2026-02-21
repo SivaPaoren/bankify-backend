@@ -44,6 +44,7 @@ public class AuditService {
 
     public AuditLogResponse toResponse(AuditLog log) {
         return new AuditLogResponse(
+                log.getCreatedAt(),
                 log.getActorType(),
                 log.getActorId(),
                 log.getAction(),

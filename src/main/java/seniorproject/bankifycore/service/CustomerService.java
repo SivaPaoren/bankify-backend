@@ -3,14 +3,18 @@ package seniorproject.bankifycore.service;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
+import seniorproject.bankifycore.domain.Account;
 import seniorproject.bankifycore.domain.Customer;
+import seniorproject.bankifycore.domain.enums.AccountStatus;
 import seniorproject.bankifycore.domain.enums.CustomerStatus;
 import seniorproject.bankifycore.domain.enums.CustomerType;
 import seniorproject.bankifycore.dto.customer.CreateCustomerRequest;
 import seniorproject.bankifycore.dto.customer.UpdateCustomerRequest;
 import seniorproject.bankifycore.dto.customer.CustomerResponse;
+import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.CustomerRepository;
 import seniorproject.bankifycore.utils.EnumMapper;
+import seniorproject.bankifycore.utils.ActorContext;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -21,24 +25,29 @@ import java.util.UUID;
 public class CustomerService {
 
     private final CustomerRepository customerRepo;
+    private final AccountRepository accountRepo;
+    private final AuditService auditService;
 
-    // Get all the list of customers
+
+    // ── Read ─────────────────────────────────────────────────────────────────
+
     public List<CustomerResponse> getCustomers() {
-        List<Customer> customers = customerRepo.findAll();
-
-        return customers.stream()
+        return customerRepo.findAll()
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    // Create a customer
+    public CustomerResponse getCustomerById(UUID id) {
+        return toResponse(byId(id));
+    }
+
+    // ── Create ───────────────────────────────────────────────────────────────
+
     @Transactional
     public CustomerResponse create(CreateCustomerRequest req) {
-
-        // check if the email is unique
-        if (customerRepo.existsByEmail(req.email())) {
+        if (customerRepo.existsByEmail(req.email()))
             throw new IllegalArgumentException("Email already exists");
-        }
 
         Customer customer = Customer.builder()
                 .firstName(req.firstName())
@@ -50,57 +59,161 @@ public class CustomerService {
                 .build();
 
         customerRepo.save(customer);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_CREATE",
+                "Customer", customer.getId().toString(),
+                "reason=admin_Create");
+
         return toResponse(customer);
     }
 
-    public CustomerResponse getCustomerById(UUID id) {
-        return toResponse(byId(id));
-    }
-
-    // helper method to find by id
-    private Customer byId(UUID id) {
-        return customerRepo.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Customer not found" + id));
-    }
+    // ── Update ───────────────────────────────────────────────────────────────
 
     @Transactional
     public CustomerResponse updateCustomer(UUID id, UpdateCustomerRequest req) {
         Customer customer = byId(id);
 
-        if (req.firstName() != null) {
-            customer.setFirstName(req.firstName());
-        }
-
-        if (req.lastName() != null) {
-            customer.setLastName(req.lastName());
-        }
-
-        if (req.phone() != null) {
-            customer.setPhoneNumber(req.phone());
-        }
+        if (req.firstName() != null) customer.setFirstName(req.firstName());
+        if (req.lastName() != null)  customer.setLastName(req.lastName());
+        if (req.phone() != null)     customer.setPhoneNumber(req.phone());
 
         if (req.status() != null) {
-            customer.setStatus(EnumMapper.toEnum(CustomerStatus.class, req.status()));
+            CustomerStatus newStatus = EnumMapper.toEnum(CustomerStatus.class, req.status());
+            customer.setStatus(newStatus);
+            cascadeAccountStatus(id, newStatus);
         }
 
         Customer saved = customerRepo.save(customer);
 
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_UPDATE",
+                "Customer", saved.getId().toString(),
+                "reason=admin_Update");
+
         return toResponse(saved);
     }
 
-    @Transactional
-    public CustomerResponse disable(UUID id) {
-        Customer customer = customerRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Customer cannot be disabled , because customer is not found"));
+    // ── Status Actions ───────────────────────────────────────────────────────
 
+    /** FREEZE — temporarily suspends customer and their ACTIVE accounts. */
+    @Transactional
+    public CustomerResponse freeze(UUID id) {
+        Customer customer = byId(id);
         customer.setStatus(CustomerStatus.FROZEN);
         customerRepo.save(customer);
+        cascadeAccountStatus(id, CustomerStatus.FROZEN);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_FREEZE",
+                "Customer", customer.getId().toString(),
+                "reason=admin_Freeze");
 
         return toResponse(customer);
     }
 
-    // helper that help Entity -> DTO
+    /** RE-ACTIVATE — restores a FROZEN customer and their FROZEN accounts. */
+    @Transactional
+    public CustomerResponse reactivate(UUID id) {
+        Customer customer = byId(id);
+        if (customer.getStatus() == CustomerStatus.CLOSED)
+            throw new IllegalStateException("Cannot re-activate a CLOSED customer");
+        customer.setStatus(CustomerStatus.ACTIVE);
+        customerRepo.save(customer);
+        cascadeAccountStatus(id, CustomerStatus.ACTIVE);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_REACTIVATE",
+                "Customer", customer.getId().toString(),
+                "reason=admin_Reactivate");
+
+        return toResponse(customer);
+    }
+
+    /** CLOSE — permanently closes the customer and ALL their accounts. */
+    @Transactional
+    public CustomerResponse close(UUID id) {
+        Customer customer = byId(id);
+        customer.setStatus(CustomerStatus.CLOSED);
+        customerRepo.save(customer);
+
+        // Close ALL accounts regardless of current status
+        List<Account> accounts = accountRepo.findByCustomer_Id(id);
+        accounts.forEach(a -> {
+            a.setStatus(AccountStatus.CLOSED);
+            auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "ACCOUNT_CLOSE",
+                "Account", a.getId().toString(),
+                "reason=customer_closed");
+        });
+        accountRepo.saveAll(accounts);
+
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "CUSTOMER_CLOSE",
+                "Customer", customer.getId().toString(),
+                "reason=admin_Close");
+
+        return toResponse(customer);
+    }
+
+    // ── Cascade helper ───────────────────────────────────────────────────────
+
+    /**
+     * Cascades account status changes when customer status changes.
+     * FROZEN  → freeze all ACTIVE accounts
+     * ACTIVE  → restore all FROZEN accounts
+     * CLOSED  → close ALL accounts (handled separately in close())
+     */
+    private void cascadeAccountStatus(UUID customerId, CustomerStatus newStatus) {
+        List<Account> accounts = accountRepo.findByCustomer_Id(customerId);
+        if (newStatus == CustomerStatus.FROZEN) {
+            accounts.stream()
+                    .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
+                    .forEach(a -> {
+                        a.setStatus(AccountStatus.FROZEN);
+                        auditService.log(
+                            ActorContext.actorType(), ActorContext.actorId(),
+                            "ACCOUNT_FREEZE",
+                            "Account", a.getId().toString(),
+                            "reason=customer_frozen");
+                    });
+            accountRepo.saveAll(accounts);
+        } else if (newStatus == CustomerStatus.ACTIVE) {
+            accounts.stream()
+                    .filter(a -> a.getStatus() == AccountStatus.FROZEN)
+                    .forEach(a -> {
+                        a.setStatus(AccountStatus.ACTIVE);
+                        auditService.log(
+                            ActorContext.actorType(), ActorContext.actorId(),
+                            "ACCOUNT_REACTIVATE",
+                            "Account", a.getId().toString(),
+                            "reason=customer_reactivated");
+                    });
+            accountRepo.saveAll(accounts);
+        }
+    }
+
+    // ── Legacy alias ─────────────────────────────────────────────────────────
+
+    /** @deprecated Use freeze() instead */
+    @Transactional
+    public CustomerResponse disable(UUID id) {
+        return freeze(id);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private Customer byId(UUID id) {
+        return customerRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
+    }
+
     private CustomerResponse toResponse(Customer customer) {
         return new CustomerResponse(
                 customer.getId(),
@@ -111,5 +224,4 @@ public class CustomerService {
                 customer.getType(),
                 customer.getStatus());
     }
-
 }

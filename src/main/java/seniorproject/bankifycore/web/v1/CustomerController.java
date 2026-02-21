@@ -48,16 +48,28 @@ public class CustomerController {
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ResponseEntity<CustomerResponse> update(@PathVariable UUID customerId,
             @Valid @RequestBody UpdateCustomerRequest request) {
-        CustomerResponse updateCustomer = customerService.updateCustomer(customerId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(updateCustomer);
+        CustomerResponse updated = customerService.updateCustomer(customerId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(updated);
     }
 
+    /** Temporarily freeze the customer (reversible). */
     @PatchMapping("/{id}/disable")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public CustomerResponse disableCustomer(@PathVariable UUID id) {
-        return customerService.disable(id);
+        return customerService.freeze(id);
     }
 
+    /** Re-activate a previously frozen customer. */
+    @PatchMapping("/{id}/reactivate")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public CustomerResponse reactivateCustomer(@PathVariable UUID id) {
+        return customerService.reactivate(id);
+    }
 
-
+    /** Permanently close the customer and all their accounts. */
+    @PatchMapping("/{id}/close")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public CustomerResponse closeCustomer(@PathVariable UUID id) {
+        return customerService.close(id);
+    }
 }

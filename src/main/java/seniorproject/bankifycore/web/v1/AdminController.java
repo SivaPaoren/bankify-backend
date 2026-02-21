@@ -11,6 +11,7 @@ import seniorproject.bankifycore.dto.admin.ResetPinRequest;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
+import seniorproject.bankifycore.dto.rotation.AdminRotationRequestItem;
 import seniorproject.bankifycore.service.AccountService;
 import seniorproject.bankifycore.service.AuditService;
 import seniorproject.bankifycore.service.partner.PartnerAppAdminService;
@@ -60,6 +61,12 @@ public class AdminController {
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public ApprovePartnerResponse approve(@PathVariable UUID id) {
         return partnerAppAdminService.approve(id);
+    }
+
+    @GetMapping("/partner-apps/rotation-requests")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public List<AdminRotationRequestItem> listRotationRequests() {
+        return partnerAppAdminService.listRotationRequests();
     }
 
     // approving api rotation for partner

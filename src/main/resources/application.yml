@@ -9,13 +9,13 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update # for now, auto-create tables; change to validate in prod
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   cache:
     type: redis
@@ -30,19 +30,23 @@ spring:
     username: bankify
     password: bankify
 
-  security:
-    ratelimit:
-      atm:
-        perMinute:5
-      partner:
-        perMinute:10
 
-    api-key:
-      pepper: "CHANGE_ME_TO_LONG_RANDOM_SECRET"
-    jwt:
-      secret: "this-should-be-long-and-random-change-me-later-1234567890"
-      expiration-seconds: 3600
 
+
+# Top-level security config (matches @Value("${security.*}") in SecurityConfig + JwtTokenService)
+security:
+  ratelimit:
+    atm:
+      perMinute: 5
+    partner:
+      perMinute: 10
+  api-key:
+    pepper: "CHANGE_ME_TO_LONG_RANDOM_SECRET"
+  jwt:
+    secret: "this-should-be-long-and-random-change-me-later-1234567890"
+    expiration-seconds: 3600
+    atm-expiration-seconds: 180
+    partner-portal-expiration-seconds: 3600
 
 logging:
   level:

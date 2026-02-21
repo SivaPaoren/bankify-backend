@@ -20,6 +20,12 @@ public class GlobalExceptionHandler {
                                 .body(error("BAD_REQUEST", ex.getMessage(), HttpStatus.BAD_REQUEST));
         }
 
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<?> handleIllegalState(IllegalStateException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(error("BAD_REQUEST", ex.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
                 String message = ex.getBindingResult()
