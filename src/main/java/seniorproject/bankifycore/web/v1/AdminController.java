@@ -8,12 +8,14 @@ import seniorproject.bankifycore.consants.ApiPaths;
 import seniorproject.bankifycore.dto.AuditLogResponse;
 import seniorproject.bankifycore.dto.admin.ApprovePartnerResponse;
 import seniorproject.bankifycore.dto.admin.ResetPinRequest;
+import seniorproject.bankifycore.dto.ledger.LedgerEntryResponse;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
 import seniorproject.bankifycore.dto.rotation.AdminRotationRequestItem;
 import seniorproject.bankifycore.service.AccountService;
 import seniorproject.bankifycore.service.AuditService;
+import seniorproject.bankifycore.service.LedgerService;
 import seniorproject.bankifycore.service.partner.PartnerAppAdminService;
 
 import java.util.List;
@@ -27,7 +29,7 @@ public class AdminController {
     private final AccountService accountService;
     private final PartnerAppAdminService partnerAppAdminService;
     private final AuditService auditService;
-
+    private final LedgerService ledgerService;
     // reset pin
     @PatchMapping("/accounts/{accountId}/pin")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
@@ -88,6 +90,12 @@ public class AdminController {
             @RequestParam(required = false) String actorType,
             @RequestParam(required = false) String action) {
         return auditService.list(actorType, action);
+    }
+
+    @GetMapping("/transactions/ledger")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<LedgerEntryResponse> ledger(@RequestParam(required = false) String reference) {
+        return ledgerService.listAll(reference);
     }
 
 }

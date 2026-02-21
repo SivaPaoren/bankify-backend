@@ -10,19 +10,6 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  bankify:
-    build: .
-    container_name: bankify-app
-    restart: always
-    depends_on:
-      - postgres
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bankify
-      SPRING_DATASOURCE_USERNAME: bankify
-      SPRING_DATASOURCE_PASSWORD: bankify
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   redis:
     image: redis:7
@@ -37,8 +24,39 @@ services:
       RABBITMQ_DEFAULT_USER: bankify
       RABBITMQ_DEFAULT_PASS: bankify
     ports:
-      - "5672:5672" #AMQP
-      - "15672:15672" #Management UI
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+
+  bankify:
+    build: .
+    container_name: bankify-app
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    ports:
+      - "8080:8080"
+    environment:
+      # Postgres (inside docker -> use service name)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bankify
+      SPRING_DATASOURCE_USERNAME: bankify
+      SPRING_DATASOURCE_PASSWORD: bankify
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # Redis (inside docker -> use service name)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # RabbitMQ (inside docker -> use service name)
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: bankify
+      SPRING_RABBITMQ_PASSWORD: bankify
+
+      # Optional: if you want to override secrets from compose
+      # SECURITY_API_KEY_PEPPER: "CHANGE_ME_TO_LONG_RANDOM_SECRET"
+      # SECURITY_JWT_SECRET: "this-should-be-long-and-random-change-me-later-1234567890"
 
 volumes:
   postgres_data:

@@ -18,6 +18,8 @@ import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.repository.LedgerEntryRepository;
 import seniorproject.bankifycore.repository.TransactionRepository;
 import seniorproject.bankifycore.utils.ActorContext;
+import org.springframework.context.ApplicationEventPublisher;
+
 
 import java.math.BigDecimal;
 
@@ -32,6 +34,8 @@ public class TransactionService {
     private final AccountRepository accountRepo;
     private final LedgerEntryRepository ledgerEntryRepo;
     private final AuditService auditService;
+    private final ApplicationEventPublisher appEvents;
+
 
     @Transactional
     public TransactionResponse deposit(String idemKey, DepositRequest request) {
@@ -72,6 +76,8 @@ public class TransactionService {
         try {
             Transaction saved = transactionRepo.save(transaction);
 
+            appEvents.publishEvent(saved); //rabbit mq
+
             // ✅ audit only when NEW transaction is created
             auditService.log(
                     ActorContext.actorType(), ActorContext.actorId(),
@@ -83,7 +89,7 @@ public class TransactionService {
                             + ",toAccountId=" + account.getId());
 
             writeLedger(account, saved, EntryDirection.CREDIT, request.amount());
-            return toResponse(transaction);
+            return toResponse(saved);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             // race safe:if two requests with the same key hit at the same time
             return transactionRepo.findByReference(idemKey)
@@ -131,6 +137,8 @@ public class TransactionService {
         try {
             Transaction saved = transactionRepo.save(transaction);
 
+            appEvents.publishEvent(saved); //rabbit mq
+
             // audit log is done here
             auditService.log(
                     ActorContext.actorType(), ActorContext.actorId(),
@@ -143,7 +151,7 @@ public class TransactionService {
 
             // ledger record
             writeLedger(account, saved, EntryDirection.DEBIT, request.amount());
-            return toResponse(transaction);
+            return toResponse(saved);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             return transactionRepo.findByReference(idemKey)
                     .map(this::toResponse)
@@ -200,6 +208,8 @@ public class TransactionService {
         accountRepo.save(toAccount);
         try {
             Transaction saved = transactionRepo.save(transaction);
+
+            appEvents.publishEvent(saved); //rabbit mq
 
             // audit logs is saved here
             auditService.log(

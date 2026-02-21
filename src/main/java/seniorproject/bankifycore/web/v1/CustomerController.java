@@ -52,14 +52,14 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.OK).body(updated);
     }
 
-    /** Temporarily freeze the customer (reversible). */
     @PatchMapping("/{id}/disable")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public CustomerResponse disableCustomer(@PathVariable UUID id) {
-        return customerService.freeze(id);
+        return customerService.freeze(id);//use freex
     }
 
-    /** Re-activate a previously frozen customer. */
+
+    /** Re-activate a previously frozen/disabled customer. */
     @PatchMapping("/{id}/reactivate")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public CustomerResponse reactivateCustomer(@PathVariable UUID id) {
@@ -72,4 +72,7 @@ public class CustomerController {
     public CustomerResponse closeCustomer(@PathVariable UUID id) {
         return customerService.close(id);
     }
+
+
+
 }

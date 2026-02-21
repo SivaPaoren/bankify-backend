@@ -1,10 +1,11 @@
 package seniorproject.bankifycore.service;
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import seniorproject.bankifycore.domain.LedgerEntry;
 import seniorproject.bankifycore.dto.ledger.LedgerEntryResponse;
 import seniorproject.bankifycore.dto.transaction.TransactionResponse;
@@ -45,11 +46,24 @@ public class LedgerService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<LedgerEntryResponse> listAll(String reference) {
+
+        var entries = (reference == null || reference.isBlank())
+                ? ledgerEntryRepo.findAllByOrderByCreatedAtDesc()
+                : ledgerEntryRepo.findByTransaction_ReferenceOrderByCreatedAtDesc(reference);
+
+        return entries.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+
     public LedgerEntryResponse toResponse(LedgerEntry ledgerEntry) {
         return new LedgerEntryResponse(
                 ledgerEntry.getId(),
                 ledgerEntry.getTransaction().getId(),
-                ledgerEntry.getDirection().toString(),
+                ledgerEntry.getDirection().name(),
                 ledgerEntry.getAmount(),
                 ledgerEntry.getCurrency().name(),
                 ledgerEntry.getCreatedAt());
