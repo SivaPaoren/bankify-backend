@@ -43,7 +43,7 @@ public class AccountController {
         return accountService.get(accountId);
     }
 
-    // Pathc api/account/{id} -> service.updateStatus()
+    // Pathc api/v1/admin/account/{id} -> service.updateStatus()
     @PatchMapping("/{accountId}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public AccountResponse update(@PathVariable UUID accountId, @RequestBody UpdateAccountRequest req) {

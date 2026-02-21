@@ -19,4 +19,11 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
             Pageable pageable
     );
 
+
+    List<LedgerEntry> findAllByOrderByCreatedAtDesc();
+
+    List<LedgerEntry> findByTransaction_ReferenceOrderByCreatedAtDesc(String reference);
+
+
+
 }

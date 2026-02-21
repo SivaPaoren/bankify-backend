@@ -27,10 +27,16 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: bankify
-    password: bankify
+    username: guest #//bankify
+    password: guest #later bankify
 
 
+
+bankify:
+  mq:
+    exchange: bankify.events
+    queue: bankify.events.q
+    routingKey: bankify.event
 
 
 # Top-level security config (matches @Value("${security.*}") in SecurityConfig + JwtTokenService)

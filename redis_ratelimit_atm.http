@@ -1,6 +1,6 @@
 @base = http://localhost:8080
-@accountNumber = {{ATM_ACCOUNT_NUMBER}}
-@pin = {{ATM_PIN}}
+@accountNumber = 340365127009
+@pin = 123456
 
 ### login (gets atmJwt)
 # @name atmLogin
@@ -44,7 +44,7 @@ Authorization: Bearer {{atmJwt}}
 
 
 @base = http://localhost:8080
-@partnerApiKey = {{PARTNER_API_KEY}}
+@partnerApiKey = 15707253af2c2bc78bf3ba8425f41968374845a7bc5f55ed30c82d1cbb634fab
 
 ### spam this quickly -> 429
 GET {{base}}/api/v1/partner/me/balance

@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import seniorproject.bankifycore.consants.ApiPaths;
+import seniorproject.bankifycore.dto.ledger.LedgerEntryResponse;
 import seniorproject.bankifycore.dto.transaction.DepositRequest;
 import seniorproject.bankifycore.dto.transaction.TransactionResponse;
 import seniorproject.bankifycore.dto.transaction.TransferRequest;
 import seniorproject.bankifycore.dto.transaction.WithdrawRequest;
+import seniorproject.bankifycore.service.LedgerService;
 import seniorproject.bankifycore.service.TransactionService;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final LedgerService ledgerService;
 
     // Deposit money into an account
     // API end point for top-ups
@@ -61,5 +64,7 @@ public class TransactionController {
     public TransactionResponse get(@PathVariable UUID transactionId) {
         return transactionService.get(transactionId);
     }
+
+
 
 }

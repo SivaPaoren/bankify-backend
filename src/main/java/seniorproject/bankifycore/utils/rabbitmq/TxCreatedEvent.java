@@ -1,4 +1,4 @@
-package seniorproject.bankifycore.utils;
+package seniorproject.bankifycore.utils.rabbitmq;
 
 import java.math.BigDecimal;
 import java.time.Instant;
