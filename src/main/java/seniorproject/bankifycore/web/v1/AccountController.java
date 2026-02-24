@@ -1,12 +1,15 @@
 package seniorproject.bankifycore.web.v1;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import seniorproject.bankifycore.consants.ApiPaths;
 import seniorproject.bankifycore.dto.account.AccountResponse;
 import seniorproject.bankifycore.dto.account.CreateAccountRequest;
 import seniorproject.bankifycore.dto.account.UpdateAccountRequest;
+import seniorproject.bankifycore.dto.admin.ResetPinRequest;
 import seniorproject.bankifycore.dto.ledger.LedgerEntryResponse;
 import seniorproject.bankifycore.service.AccountService;
 import seniorproject.bankifycore.service.LedgerService;
@@ -46,20 +49,30 @@ public class AccountController {
     // Pathc api/v1/admin/account/{id} -> service.updateStatus()
     @PatchMapping("/{accountId}")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public AccountResponse update(@PathVariable UUID accountId, @RequestBody UpdateAccountRequest req) {
+    public AccountResponse update(@PathVariable UUID accountId,@Valid @RequestBody UpdateAccountRequest req) {
         return accountService.updateStatus(accountId, req);
     }
 
     @GetMapping("/{accountId}/ledger")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public List<LedgerEntryResponse> ledger(@PathVariable UUID accountId) {
+    public List<LedgerEntryResponse> getLedgerByAccount(@PathVariable UUID accountId) {
         return ledgerService.listByAccount(accountId);
     }
 
-    @PatchMapping("/{id}/disable")
+    @PatchMapping("/{accountId}/disable")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public AccountResponse disable(@PathVariable UUID id) {
-        return accountService.disable(id);
+    public AccountResponse disableAccount(@PathVariable UUID accountId) {
+        return accountService.disable(accountId);
     }
+
+    // reset pin for account manually by admin
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/{accountId}/pin")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public void resetPin(@PathVariable UUID accountId, @RequestBody ResetPinRequest req) {
+        accountService.resetPin(accountId, req);
+    }
+
+
 
 }

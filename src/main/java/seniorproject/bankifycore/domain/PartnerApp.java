@@ -5,6 +5,7 @@ import lombok.*;
 import seniorproject.bankifycore.domain.base.Auditable;
 import seniorproject.bankifycore.domain.enums.PartnerAppStatus;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -39,4 +40,21 @@ public class PartnerApp extends Auditable {
 
     @Column(name = "callback_url", nullable = true, length = 500)
     private String callbackUrl;
+
+    @Column(name = "webhook_last_status_code")
+    private Integer webhookLastStatusCode;
+
+    @Column(name = "webhook_last_attempt_at")
+    private Instant webhookLastAttemptAt;
+
+    @Column(name = "webhook_last_success_at")
+    private Instant webhookLastSuccessAt;
+
+    @Column(name = "webhook_last_error", length = 255)
+    private String webhookLastError;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("0")
+    private Integer webhookConsecutiveFailures = 0;
 }

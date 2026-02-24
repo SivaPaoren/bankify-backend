@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bankify
+    url: jdbc:postgresql://localhost:5433/bankify
     username: bankify
     password: bankify
     driver-class-name: org.postgresql.Driver
@@ -30,14 +30,11 @@ spring:
     username: guest #//bankify
     password: guest #later bankify
 
-
-
 bankify:
   mq:
     exchange: bankify.events
     queue: bankify.events.q
     routingKey: bankify.event
-
 
 # Top-level security config (matches @Value("${security.*}") in SecurityConfig + JwtTokenService)
 security:
@@ -60,6 +57,3 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
     org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
-
-
-

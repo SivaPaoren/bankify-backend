@@ -11,8 +11,10 @@ import seniorproject.bankifycore.dto.transaction.TransactionResponse;
 import seniorproject.bankifycore.dto.transaction.TransferRequest;
 import seniorproject.bankifycore.dto.transaction.WithdrawRequest;
 import seniorproject.bankifycore.repository.AccountRepository;
+import seniorproject.bankifycore.service.AuditService;
 import seniorproject.bankifycore.service.LedgerService;
 import seniorproject.bankifycore.service.TransactionService;
+import seniorproject.bankifycore.utils.ActorContext;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,6 +28,7 @@ public class AtmMeService {
     private final LedgerService ledgerService;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public AtmBalanceResponse balance() {
@@ -103,6 +106,13 @@ public class AtmMeService {
         acc.setPinChangeRequired(false);
 
         accountRepository.save(acc);
+
+        // audit log is generated here
+        auditService.log(
+                ActorContext.actorType(), ActorContext.actorId(),
+                "PARTNER_APP_APPROVED",
+                "PartnerApp", acc.getId().toString(),
+                "status=" + acc.getStatus().name());
     }
 
 

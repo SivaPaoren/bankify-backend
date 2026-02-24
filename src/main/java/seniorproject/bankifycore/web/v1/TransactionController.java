@@ -66,5 +66,11 @@ public class TransactionController {
     }
 
 
+    //get list of ledgers
+    @GetMapping("/ledger")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<LedgerEntryResponse> listLedgers(@RequestParam(required = false) String reference) {
+        return ledgerService.listAll(reference);
+    }
 
 }

@@ -9,6 +9,7 @@ import seniorproject.bankifycore.dto.AuditLogResponse;
 import seniorproject.bankifycore.dto.admin.ApprovePartnerResponse;
 import seniorproject.bankifycore.dto.admin.ResetPinRequest;
 import seniorproject.bankifycore.dto.ledger.LedgerEntryResponse;
+import seniorproject.bankifycore.dto.partner.PartnerPendingResponse;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
@@ -26,16 +27,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AccountService accountService;
     private final PartnerAppAdminService partnerAppAdminService;
     private final AuditService auditService;
     private final LedgerService ledgerService;
-    // reset pin
-    @PatchMapping("/accounts/{accountId}/pin")
-    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public void resetPin(@PathVariable UUID accountId, @RequestBody ResetPinRequest req) {
-        accountService.resetPin(accountId, req);
-    }
+
 
     // Partners
     @GetMapping("/partner-apps")
@@ -44,26 +39,35 @@ public class AdminController {
         return partnerAppAdminService.list();
     }
 
-    // disabling the account
+    // disabling or freezing the account of the partner
     @PatchMapping("/partner-apps/{id}/disable")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public PartnerAppResponse disable(@PathVariable UUID id) {
+    public PartnerAppResponse disablePartner(@PathVariable UUID id) {
         return partnerAppAdminService.disable(id);
     }
 
-    // activating the account
+    // activating the account after being disabled by the admin
     @PatchMapping("/partner-apps/{id}/activate")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public PartnerAppResponse activate(@PathVariable UUID id) {
+    public PartnerAppResponse activatePartner(@PathVariable UUID id) {
         return partnerAppAdminService.activate(id);
     }
 
     // approve API for partner first time creating account
     @PatchMapping("/partner-apps/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public ApprovePartnerResponse approve(@PathVariable UUID id) {
+    public ApprovePartnerResponse approveApiKey(@PathVariable UUID id) {
         return partnerAppAdminService.approve(id);
     }
+
+
+    //pending apps
+    @GetMapping("/partner-apps/pending")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public List<PartnerPendingResponse> listPendingPartnerApps(){
+        return partnerAppAdminService.listPendingPartnerApps();
+    }
+
 
     @GetMapping("/partner-apps/rotation-requests")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
@@ -92,10 +96,6 @@ public class AdminController {
         return auditService.list(actorType, action);
     }
 
-    @GetMapping("/transactions/ledger")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<LedgerEntryResponse> ledger(@RequestParam(required = false) String reference) {
-        return ledgerService.listAll(reference);
-    }
+
 
 }

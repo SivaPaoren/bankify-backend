@@ -52,18 +52,18 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.OK).body(updated);
     }
 
-    @PatchMapping("/{id}/disable")
+    @PatchMapping("/{customerId}/disable")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public CustomerResponse disableCustomer(@PathVariable UUID id) {
-        return customerService.freeze(id);//use freex
+    public CustomerResponse disableCustomer(@PathVariable UUID customerId) {
+        return customerService.freeze(customerId);//use freex
     }
 
 
     /** Re-activate a previously frozen/disabled customer. */
-    @PatchMapping("/{id}/reactivate")
+    @PatchMapping("/{customerId}/reactivate")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public CustomerResponse reactivateCustomer(@PathVariable UUID id) {
-        return customerService.reactivate(id);
+    public CustomerResponse reactivateCustomer(@PathVariable UUID customerId) {
+        return customerService.reactivate(customerId);
     }
 
     /** Permanently close the customer and all their accounts. */

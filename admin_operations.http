@@ -18,13 +18,13 @@ Content-Type: application/json
 
 ### Create customer
 # @name createCustomer
-@randomInt = 201;
+@randomInt = 251;
 POST {{base}}/api/v1/admin/customers
 Authorization: Bearer {{adminJwt}}
 Content-Type: application/json
 
 {
-  "firstName": "Meili",
+  "firstName": "Khai Mook",
   "lastName": "Not Sure",
   "phoneNumber": "0812345678",
   "email": "atm.user{{randomInt}}@demo.com",
@@ -47,6 +47,7 @@ Authorization: Bearer {{adminJwt}}
 ### Create account (ADMIN)
 
 # @name createAccount
+
 POST {{base}}/api/v1/admin/accounts
 Authorization: Bearer {{adminJwt}}
 Content-Type: application/json
@@ -68,15 +69,26 @@ GET {{base}}/api/v1/admin/accounts
 Authorization: Bearer {{adminJwt}}
 
 ### Get account
-GET {{base}}/api/v1/admin/accounts/bea1cdb1-d575-4699-a3a9-6adcdc6696af
+GET {{base}}/api/v1/admin/accounts/d2341d15-40f2-40fd-8247-6a6725dbab69
 Authorization: Bearer {{adminJwt}}
 
 ### Ledger
-GET {{base}}/api/v1/admin/accounts/b47cdd22-0db0-4983-9b95-014d75fe405b/ledger
+GET {{base}}/api/v1/admin/accounts/d2341d15-40f2-40fd-8247-6a6725dbab69/ledger
 Authorization: Bearer {{adminJwt}}
 
+### All Ledger
+GET {{base}}/api/v1/admin/accounts/ledger
+Authorization: Bearer {{adminJwt}}
+
+
+### All Ledger
+GET {{base}}/api/v1/admin/accounts/ledger?reference=ATM-TXN-005
+Authorization: Bearer {{adminJwt}}
+
+
+
 ### Disable account
-PATCH {{base}}/api/v1/admin/accounts/b0fe7c7e-08c1-4252-92c6-bb82bf4b7d10/disable
+PATCH {{base}}/api/v1/admin/accounts/00d49b9b-0ce3-474e-83e8-bcfb4c78e895/disable
 Authorization: Bearer {{adminJwt}}
 
 

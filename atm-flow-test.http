@@ -1,10 +1,10 @@
 @base = http://localhost:8080
-@accountNumber = 340365127009
+@accountNumber = 902585139295
 @pin = {{ATM_PIN}}
 @newPin = 4321
-@toFrozenAccount = 636125022268
+@toFrozenAccount = 595036572743
 @toAccountId = b47cdd22-0db0-4983-9b95-014d75fe405b
-@toAccountNumber = 152360574021
+@toAccountNumber = 944583538372
 
 ### ATM login -> atmJwt
 # @name atmLogin
@@ -13,7 +13,7 @@ Content-Type: application/json
 
 {
   "accountNumber": "{{accountNumber}}",
-  "pin": "123456"
+  "pin": "121212"
 }
 
 > {%
@@ -31,7 +31,7 @@ Idempotency-Key: ATM-TXN-007
 Content-Type: application/json
 
 {
-  "amount": 10000,
+  "amount": 3500,
   "note": "atm deposit"
 }
 
@@ -42,7 +42,7 @@ Idempotency-Key: ATM-TXN-008
 Content-Type: application/json
 
 {
-  "amount": 10000,
+  "amount": 4000,
   "note": "atm withdraw"
 }
 
@@ -54,7 +54,7 @@ Content-Type: application/json
 
 {
   "toAccountNumber": "{{toAccountNumber}}",
-  "amount": 9999,
+  "amount": 7000,
   "note": "atm transfer"
 }
 
@@ -64,6 +64,6 @@ Authorization: Bearer {{atmJwt}}
 Content-Type: application/json
 
 {
-  "oldPin": "654321",
-  "newPin": "123456"
+  "oldPin": "123456",
+  "newPin": "121212"
 }

@@ -9,6 +9,7 @@ import seniorproject.bankifycore.domain.PartnerApp;
 import seniorproject.bankifycore.domain.PartnerKeyRotationRequest;
 import seniorproject.bankifycore.domain.enums.*;
 import seniorproject.bankifycore.dto.admin.ApprovePartnerResponse;
+import seniorproject.bankifycore.dto.partner.PartnerPendingResponse;
 import seniorproject.bankifycore.dto.partnerapp.PartnerAppResponse;
 import seniorproject.bankifycore.dto.rotation.ApproveRotationResponse;
 import seniorproject.bankifycore.dto.rotation.RejectRotationResponse;
@@ -185,13 +186,7 @@ public class PartnerAppAdminService {
         return new RejectRotationResponse(r.getId(), r.getStatus().name());
     }
 
-    private PartnerAppResponse toPartnerAppResponse(PartnerApp partner) {
-        return new PartnerAppResponse(
-                partner.getId(),
-                partner.getName(),
-                partner.getStatus().name(),
-                partner.getCreatedAt());
-    }
+
 
     public PartnerAppResponse activate(UUID id) {
         PartnerApp partner = partnerAppRepo.findById(id)
@@ -208,4 +203,21 @@ public class PartnerAppAdminService {
 
         return toPartnerAppResponse(partner);
     }
+
+
+    //return list of Parnter that are pending API keys, for the first time
+    public List<PartnerPendingResponse> listPendingPartnerApps() {
+        return partnerAppRepo.findPendingPartnerApps();
+    }
+
+
+    private PartnerAppResponse toPartnerAppResponse(PartnerApp partner) {
+        return new PartnerAppResponse(
+                partner.getId(),
+                partner.getName(),
+                partner.getStatus().name(),
+                partner.getCreatedAt());
+    }
+
+
 }

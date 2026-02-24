@@ -1,145 +1,210 @@
-@base = http://localhost:8080
+### partner-flow-with-webhook.http
+@base = http://localhost:8080/api/v1
 
-### Partner signup (public)
+### ==========
+### 0) Config inputs (edit these)
+### ==========
+@partnerAppName = Demo Partner App
+@partnerEmail = demo.partner.owner@demo.co
+@partnerPassword = Passw0rd!
+
+# Use any existing customer account number to pay to (created by admin earlier)
+@customerAccountNumber = 902585139295
+
+# Put a webhook.site URL here (create one at webhook.site)
+@webhookUrl = https://webhook.site/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+
+### ==========
+### 1) PARTNER SIGNUP (PUBLIC)
+### Creates partner app (PENDING) + owner user
+### ==========
 # @name partnerSignup
-POST {{base}}/api/partner/auth/signup
+POST {{base}}/partner/auth/signup
 Content-Type: application/json
 
 {
-  "appName": "My Client App",
-  "email": "partner.owner+{{randomInt}}@demo.com",
-  "password": "Passw0rd!",
-  "callbackUrl": "https://client.com/webhooks/bankify"
+  "appName": "{{partnerAppName}}",
+  "email": "{{partnerEmail}}",
+  "password": "{{partnerPassword}}",
+  "callbackUrl": "{{webhookUrl}}"
 }
 
 > {%
-    client.global.set("partnerEmail", response.body.email ?? "partner.owner@demo.com");
-    client.global.set("clientAppId", response.body.clientAppId ?? response.body.appId ?? response.body.id);
+    // Some projects return partnerAppId; some don’t.
+    // If yours does, store it:
+    if (response.body && response.body.partnerAppId) {
+        client.global.set("partnerAppId", response.body.partnerAppId);
+    }
 %}
 
-### Partner portal login (public) -> PARTNER_PORTAL JWT
+
+### ==========
+### 2) PARTNER PORTAL LOGIN (PUBLIC)
+### ==========
 # @name partnerPortalLogin
-POST {{base}}/api/partner/auth/login
+POST {{base}}/partner/auth/login
 Content-Type: application/json
 
 {
   "email": "{{partnerEmail}}",
-  "password": "Passw0rd!"
+  "password": "{{partnerPassword}}"
 }
 
 > {%
     client.global.set("portalJwt", response.body.token);
 %}
 
-### Portal me (requires portal JWT)
-GET {{base}}/api/partner/portal/me
+
+### ==========
+### 3) (OPTIONAL) PARTNER PORTAL ME (JWT)
+### Confirms portal JWT works
+### ==========
+GET {{base}}/partner/portal/me
 Authorization: Bearer {{portalJwt}}
 
 
-
-
-
-
-# Put real account IDs (use the ones created by admin)
-@accountA = {{ACCOUNT_ID_A}}
-@accountB = {{ACCOUNT_ID_B}}
-
-### Partner balance
-GET {{base}}/api/partner/me/balance
-X-API-Key: {{partnerApiKey}}
-
-### Deposit (idempotent)
-POST {{base}}/api/partner/me/deposit
-X-API-Key: {{partnerApiKey}}
-Idempotency-Key: TXN-PARTNER-001
+### ==========
+### 4) ADMIN LOGIN (to approve partner)
+### ==========
+# @name adminLogin
+POST {{base}}/admin/auth/login
 Content-Type: application/json
 
 {
-  "accountId": "{{accountA}}",
-  "amount": 100,
-  "note": "partner deposit"
-}
-
-### Withdraw (idempotent)
-POST {{base}}/api/partner/me/withdraw
-X-API-Key: {{partnerApiKey}}
-Idempotency-Key: TXN-PARTNER-002
-Content-Type: application/json
-
-{
-  "accountId": "{{accountA}}",
-  "amount": 50,
-  "note": "partner withdraw"
-}
-
-### Transfer (idempotent)
-POST {{base}}/api/partner/me/transfer
-X-API-Key: {{partnerApiKey}}
-Idempotency-Key: TXN-PARTNER-003
-Content-Type: application/json
-
-{
-  "fromAccountId": "{{accountA}}",
-  "toAccountId": "{{accountB}}",
-  "amount": 25,
-  "note": "partner transfer"
-}
-
-### Retry same deposit (should NOT create new tx)
-POST {{base}}/api/partner/me/deposit
-X-API-Key: {{partnerApiKey}}
-Idempotency-Key: TXN-PARTNER-001
-Content-Type: application/json
-
-{
-  "accountId": "{{accountA}}",
-  "amount": 100,
-  "note": "partner deposit"
-}
-
-
-
-
-
-
-
-
-### Request rotation (portal JWT)
-@partnerApiKey =
-# @name rotationRequest
-POST {{base}}/api/partner/portal/keys/rotate-request
-Authorization: Bearer {{portalJwt}}
-Content-Type: application/json
-
-{
-  "reason": "suspected leak"
+  "email": "admin@bankify.local",
+  "password": "admin123"
 }
 
 > {%
-    client.global.set("rotationRequestId", response.body.requestId);
+    client.global.set("adminJwt", response.body.token);
 %}
 
-### List rotation requests (portal JWT)
-GET {{base}}/api/partner/portal/keys/rotation-requests
-Authorization: Bearer {{portalJwt}}
+
+### ==========
+### 5) ADMIN: LIST PARTNER APPS (find the ID)
+### If you didn’t capture partnerAppId from signup response, use this list.
+### ==========
+# @name adminListClients
+GET {{base}}/admin/partner-apps/pending
+Authorization: Bearer {{adminJwt}}
+
+> {%
+    // If your response is an array, you can manually copy the correct id from response.
+    // If you want automation, you can tweak this after you see your exact JSON shape.
+%}
 
 
+### ==========
+### 6) ADMIN: APPROVE PARTNER (GET API KEY ONCE)
+### Replace {{partnerAppId}} manually if not auto-set.
+### ==========
+# @name adminApproveClient
+PATCH {{base}}/admin/partner-apps/{{partnerAppId}}/approve
+Authorization: Bearer {{adminJwt}}
 
-### Old key should fail (or 401)
-GET {{base}}/api/partner/me/balance
+> {%
+    // Most implementations return apiKey once here.
+    if (response.body && response.body.apiKey) {
+        client.global.set("partnerApiKey", response.body.apiKey);
+    }
+%}
+
+
+### ==========
+### 7) PARTNER API: BALANCE (API KEY)
+### ==========
+GET {{base}}/partner/me/balance
 X-API-Key: {{partnerApiKey}}
 
-### New key should work
-GET {{base}}/api/partner/me/balance
-X-API-Key: {{partnerApiKey2}}
 
-
-
-
-
-
-@base = http://localhost:8080
-
-### Spam partner endpoint (run repeatedly)
-GET {{base}}/api/partner/me/balance
+### ==========
+### 8) PARTNER API: DEPOSIT (API KEY + IDEMPOTENCY)
+### Triggers TX_CREATED -> RabbitMQ -> (consumer) -> webhook delivery
+### ==========
+POST {{base}}/partner/me/deposit
 X-API-Key: {{partnerApiKey}}
+Idempotency-Key: P-DEP-001
+Content-Type: application/json
+
+{
+  "amount": 1000,
+  "note": "partner topup"
+}
+
+
+### ==========
+### 9) IDEMPOTENCY TEST (repeat same key)
+### Expect: same TransactionResponse (no duplicate)
+### ==========
+POST {{base}}/partner/me/deposit
+X-API-Key: {{partnerApiKey}}
+Idempotency-Key: P-DEP-001
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "note": "partner topup (retry same idem key)"
+}
+
+
+### ==========
+### 10) PARTNER API: WITHDRAW (API KEY + IDEMPOTENCY)
+### ==========
+POST {{base}}/partner/me/withdraw
+X-API-Key: {{partnerApiKey}}
+Idempotency-Key: P-WD-001
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "note": "partner settlement"
+}
+
+
+### ==========
+### 11) PARTNER API: TRANSFER TO CUSTOMER (API KEY + IDEMPOTENCY)
+### Uses accountNumber (destination)
+### ==========
+POST {{base}}/partner/me/transfer
+X-API-Key: {{partnerApiKey}}
+Idempotency-Key: P-TF-001
+Content-Type: application/json
+
+{
+  "accountNumber": "{{customerAccountNumber}}",
+  "amount": 500,
+  "note": "partner payout"
+}
+
+
+### ==========
+### 12) PARTNER API: TRANSACTIONS HISTORY
+### ==========
+GET {{base}}/partner/me/transactions
+X-API-Key: {{partnerApiKey}}
+
+
+### ==========
+### 13) ADMIN: WEBHOOK HEALTH CHECK (partner profile/list)
+### This depends on where you expose PartnerApp fields.
+### Most likely: /admin/clients shows callbackUrl + webhookLastStatusCode etc.
+### ==========
+GET {{base}}/admin/partner-apps
+Authorization: Bearer {{adminJwt}}
+
+
+### ==========
+### 14) ADMIN: GLOBAL LEDGER (should show DEBIT/CREDIT entries)
+### Useful to verify money ops were correctly recorded.
+### ==========
+GET {{base}}/admin/transactions/ledger
+Authorization: Bearer {{adminJwt}}
+
+
+### ==========
+### 15) ADMIN: FILTER LEDGER BY IDEMPOTENCY KEY
+### (shows the single tx’s ledger entries)
+### ==========
+GET {{base}}/admin/transactions/ledger?reference=P-TF-001
+Authorization: Bearer {{adminJwt}}
