@@ -11,6 +11,7 @@ import seniorproject.bankifycore.dto.transaction.TransactionResponse;
 import seniorproject.bankifycore.dto.transaction.TransferRequest;
 import seniorproject.bankifycore.dto.transaction.WithdrawRequest;
 import seniorproject.bankifycore.repository.AccountRepository;
+import seniorproject.bankifycore.service.AuditService;
 import seniorproject.bankifycore.service.LedgerService;
 import seniorproject.bankifycore.service.TransactionService;
 
@@ -26,6 +27,7 @@ public class AtmMeService {
     private final LedgerService ledgerService;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public AtmBalanceResponse balance() {
@@ -103,6 +105,13 @@ public class AtmMeService {
         acc.setPinChangeRequired(false);
 
         accountRepository.save(acc);
+
+        auditService.log(
+                "ATM", acc.getId().toString(),
+                "ATM_PIN_CHANGE",
+                "ACCOUNT", acc.getId().toString(),
+                "ATM user changed their PIN"
+        );
     }
 
 

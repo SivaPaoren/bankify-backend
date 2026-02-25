@@ -18,6 +18,7 @@ import seniorproject.bankifycore.dto.partner.PartnerSignupResponse;
 import seniorproject.bankifycore.repository.PartnerUserRepository;
 import seniorproject.bankifycore.repository.PartnerAppRepository;
 import seniorproject.bankifycore.security.JwtTokenService;
+import seniorproject.bankifycore.service.AuditService;
 
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ public class PartnerPortalAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
     private final PartnerAppRepository partnerAppRepo;
+    private final AuditService auditService;
 
     // This method retrieves the UUID of the currently authenticated partner from
     // Spring Security’s security context and throws an error if the
@@ -68,7 +70,15 @@ public class PartnerPortalAuthService {
         String token = jwtTokenService.generatePartnerPortalToken(
                 user.getId(),
                 user.getEmail(),
-                user.getRole().name());
+                user.getRole().name()
+        );
+
+        auditService.log(
+                "PARTNER", user.getId().toString(),
+                "PARTNER_LOGIN",
+                "PARTNER_USER", user.getId().toString(),
+                "Partner logged in successfully"
+        );
 
         return new PartnerLoginResponse(token);
     }
