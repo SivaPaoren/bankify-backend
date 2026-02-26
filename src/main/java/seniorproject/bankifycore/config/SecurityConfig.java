@@ -106,7 +106,12 @@ public class SecurityConfig {
                 http.csrf(csrf -> csrf.disable())
                                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/error", "/health", ApiPaths.ADMIN + "/auth/login")
+                                                .requestMatchers(
+                                                        "/error",
+                                                        "/health",
+                                                        ApiPaths.ADMIN + "/auth/login",
+                                                        ApiPaths.API_V1 + "/bootstrap/**"
+                                                        )
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

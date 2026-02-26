@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5434/bankify
+    username: bankify
+    password: bankify
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+bankify:
+  mq:
+    exchange: bankify.events
+    queue: bankify.events.q
+    routingKey: bankify.event
+
+security:
+  api-key:
+    pepper: "dev-pepper"
+  jwt:
+    secret: "dev-secret-please-change-32-bytes-minimum-1234567890!!"
+    expiration-seconds: 3600
+    atm-expiration-seconds: 180
+    partner-portal-expiration-seconds: 3600
+
+logging:
+  level:
+    org.springframework.security: INFO
