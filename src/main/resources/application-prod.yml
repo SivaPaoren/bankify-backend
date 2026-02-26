@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+bankify:
+  mq:
+    exchange: ${BANKIFY_MQ_EXCHANGE:bankify.events}
+    queue: ${BANKIFY_MQ_QUEUE:bankify.events.q}
+    routingKey: ${BANKIFY_MQ_ROUTING_KEY:bankify.event}
+
+security:
+  api-key:
+    pepper: ${SECURITY_API_KEY_PEPPER}
+  jwt:
+    secret: ${SECURITY_JWT_SECRET}
+    expiration-seconds: ${SECURITY_JWT_EXP_SECONDS:3600}
+    atm-expiration-seconds: ${SECURITY_JWT_ATM_EXP_SECONDS:600}
+    partner-portal-expiration-seconds: ${SECURITY_JWT_PARTNER_PORTAL_EXP_SECONDS:3600}
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: OFF

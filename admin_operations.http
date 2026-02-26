@@ -2,19 +2,19 @@
 
 
 
+### Admin login -> adminJwt
 # @name adminLogin
 POST {{base}}/api/v1/admin/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@bankify.local",
-  "password": "admin123"
+  "email": "admin@bankify.com",
+  "password": "StrongPassword123!!"
 }
 
 > {%
     client.global.set("adminJwt", response.body.token);
 %}
-
 
 ### Create customer
 # @name createCustomer
@@ -24,10 +24,10 @@ Authorization: Bearer {{adminJwt}}
 Content-Type: application/json
 
 {
-  "firstName": "Khai Mook",
-  "lastName": "Not Sure",
+  "firstName": "Asalia",
+  "lastName": "World",
   "phoneNumber": "0812345678",
-  "email": "atm.user{{randomInt}}@demo.com",
+  "email": "asalia@gmil.com",
   "type": "INDIVIDUAL"
 }
 
@@ -54,7 +54,7 @@ Content-Type: application/json
 
 {
   "customerId": "{{customerId}}",
-  "type": "CURRENT",
+  "type": "WALLET",
   "currency": "THB",
   "pin": "123456"
 }

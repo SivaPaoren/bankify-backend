@@ -1,35 +1,26 @@
 services:
   postgres:
     image: postgres:17
-    container_name: bankify-postgres
     environment:
       POSTGRES_DB: bankify
       POSTGRES_USER: bankify
       POSTGRES_PASSWORD: bankify
-    ports:
-      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7
-    container_name: bankify-redis
-    ports:
-      - "6379:6379"
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: bankify-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: bankify
       RABBITMQ_DEFAULT_PASS: bankify
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # Management UI
+      - "15672:15672"   # optional: management UI (can remove if prof doesn't need)
 
   bankify:
     build: .
-    container_name: bankify-app
     restart: always
     depends_on:
       - postgres
@@ -38,25 +29,29 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Postgres (inside docker -> use service name)
+      SPRING_PROFILES_ACTIVE: prod
+
+      # DB
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bankify
       SPRING_DATASOURCE_USERNAME: bankify
       SPRING_DATASOURCE_PASSWORD: bankify
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
-      # Redis (inside docker -> use service name)
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
-      # RabbitMQ (inside docker -> use service name)
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: bankify
-      SPRING_RABBITMQ_PASSWORD: bankify
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: bankify
+      RABBITMQ_PASSWORD: bankify
 
-      # Optional: if you want to override secrets from compose
-      # SECURITY_API_KEY_PEPPER: "CHANGE_ME_TO_LONG_RANDOM_SECRET"
-      # SECURITY_JWT_SECRET: "this-should-be-long-and-random-change-me-later-1234567890"
+      # REQUIRED secrets for prod
+      SECURITY_API_KEY_PEPPER: "CHANGE_ME_LONG_RANDOM"
+      SECURITY_JWT_SECRET: "CHANGE_ME_LONG_RANDOM_JWT_SECRET"
+
+      # optional bootstrap (ONLY set when you want to create first admin)
+      # BANKIFY_BOOTSTRAP_TOKEN: "one-time-token"
 
 volumes:
   postgres_data:

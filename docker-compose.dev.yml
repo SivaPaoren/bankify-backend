@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: bankify
+      POSTGRES_USER: bankify
+      POSTGRES_PASSWORD: bankify
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_dev:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: bankify
+      RABBITMQ_DEFAULT_PASS: bankify
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_dev:
