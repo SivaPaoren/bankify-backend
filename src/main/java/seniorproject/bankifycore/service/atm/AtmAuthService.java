@@ -12,6 +12,7 @@ import seniorproject.bankifycore.dto.atm.AtmLoginRequest;
 import seniorproject.bankifycore.dto.atm.AtmLoginResponse;
 import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.security.JwtTokenService;
+import seniorproject.bankifycore.service.AuditService;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class AtmAuthService {
     private final AccountRepository accountRepo;
     private final JwtTokenService jwtService; // existing JWT generator
     private final PasswordEncoder passwordEncoder; // BCryptPasswordEncoder bean
+    private final AuditService auditService;
 
     public UUID currentAccountId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -75,6 +77,14 @@ public class AtmAuthService {
         // ✅ issue JWT scoped to ATM
         // Put accountId in token so /api/atm/me/** never needs accountId from frontend.
         String token = jwtService.generateAtmToken(acc.getId());
+
+        auditService.log(
+                "ATM", acc.getId().toString(),
+                "ATM_LOGIN",
+                "ACCOUNT", acc.getId().toString(),
+                "ATM user logged in successfully"
+        );
+
         return new AtmLoginResponse(token, acc.isPinChangeRequired());
     }
 

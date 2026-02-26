@@ -14,7 +14,6 @@ import seniorproject.bankifycore.repository.AccountRepository;
 import seniorproject.bankifycore.service.AuditService;
 import seniorproject.bankifycore.service.LedgerService;
 import seniorproject.bankifycore.service.TransactionService;
-import seniorproject.bankifycore.utils.ActorContext;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -107,12 +106,12 @@ public class AtmMeService {
 
         accountRepository.save(acc);
 
-        // audit log is generated here
         auditService.log(
-                ActorContext.actorType(), ActorContext.actorId(),
-                "PARTNER_APP_APPROVED",
-                "PartnerApp", acc.getId().toString(),
-                "status=" + acc.getStatus().name());
+                "ATM", acc.getId().toString(),
+                "ATM_PIN_CHANGE",
+                "ACCOUNT", acc.getId().toString(),
+                "ATM user changed their PIN"
+        );
     }
 
 

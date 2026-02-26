@@ -12,6 +12,7 @@ public class ActorContext {
     public static String actorType() {
         Authentication a = SecurityContextHolder.getContext().getAuthentication();
         if (a == null) return "SYSTEM";
+        if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_ADMIN"))) return "ADMIN";
         if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_ATM"))) return "ATM";
         if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_PARTNER"))) return "PARTNER";
         return "USER";
