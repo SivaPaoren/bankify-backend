@@ -41,8 +41,6 @@ public class PartnerAppAdminService {
     @Value("${security.api-key.pepper:change-me}")
     private String pepper;
 
-
-
     @Transactional
     public List<PartnerAppResponse> list() {
         return partnerAppRepo.findAll().stream()
@@ -113,7 +111,9 @@ public class PartnerAppAdminService {
                 "PartnerApp", app.getId().toString(),
                 "status=" + app.getStatus().name());
 
-        return new ApprovePartnerResponse(app.getId(), app.getStatus().name(), apiKeyPlain);
+        // Store key in vault — partner retrieves once via /partner/portal/key/retrieve
+        keyVaultService.store(app.getId(), apiKeyPlain);
+        return new ApprovePartnerResponse(app.getId(), app.getStatus().name());
     }
 
     @Transactional(readOnly = true)
@@ -189,8 +189,6 @@ public class PartnerAppAdminService {
         return new RejectRotationResponse(r.getId(), r.getStatus().name());
     }
 
-
-
     public PartnerAppResponse activate(UUID id) {
         PartnerApp partner = partnerAppRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PartnerApp not found"));
@@ -207,12 +205,10 @@ public class PartnerAppAdminService {
         return toPartnerAppResponse(partner);
     }
 
-
-    //return list of Parnter that are pending API keys, for the first time
+    // return list of Parnter that are pending API keys, for the first time
     public List<PartnerPendingResponse> listPendingPartnerApps() {
         return partnerAppRepo.findPendingPartnerApps();
     }
-
 
     private PartnerAppResponse toPartnerAppResponse(PartnerApp partner) {
         return new PartnerAppResponse(
@@ -221,6 +217,5 @@ public class PartnerAppAdminService {
                 partner.getStatus().name(),
                 partner.getCreatedAt());
     }
-
 
 }
