@@ -1,6 +1,5 @@
 package seniorproject.bankifycore.security;
 
-
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +27,6 @@ public class AtmJwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);
@@ -51,8 +49,7 @@ public class AtmJwtAuthenticationFilter extends OncePerRequestFilter {
             var auth = new UsernamePasswordAuthenticationToken(
                     accountId,
                     null,
-                    List.of(new SimpleGrantedAuthority("ROLE_ATM"))
-            );
+                    List.of(new SimpleGrantedAuthority("ROLE_ATM")));
 
             SecurityContextHolder.getContext().setAuthentication(auth);
             chain.doFilter(request, response);
@@ -69,8 +66,7 @@ public class AtmJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(ApiPaths.ATM);
+        return !request.getServletPath().startsWith(ApiPaths.ATM);
     }
-
 
 }
