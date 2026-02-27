@@ -1,10 +1,12 @@
 package seniorproject.bankifycore.service.partner;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import seniorproject.bankifycore.domain.PartnerApp;
 import seniorproject.bankifycore.domain.PartnerKeyRotationRequest;
 import seniorproject.bankifycore.domain.PartnerUser;
@@ -14,6 +16,7 @@ import seniorproject.bankifycore.dto.partner.PartnerPortalMeResponse;
 import seniorproject.bankifycore.dto.rotation.RotateKeyRequest;
 import seniorproject.bankifycore.dto.rotation.RotateKeyResponse;
 import seniorproject.bankifycore.dto.rotation.RotationRequestItem;
+import seniorproject.bankifycore.repository.PartnerAppRepository;
 import seniorproject.bankifycore.repository.PartnerUserRepository;
 import seniorproject.bankifycore.repository.RotationRepository;
 
@@ -26,6 +29,7 @@ public class PartnerPortalService {
 
         private final PartnerUserRepository partnerUserRepo;
         private final RotationRepository rotationRepo;
+
 
         private UUID currentPartnerUserId() {
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -116,6 +120,29 @@ public class PartnerPortalService {
                                                 r.getReason(),
                                                 r.getCreatedAt()))
                                 .toList();
+        }
+
+
+
+        public UUID extractPartnerAppId(Authentication auth) {
+
+                if (auth == null || auth.getPrincipal() == null) {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+                }
+
+                // your filter stores UUID directly as principal
+                UUID partnerUserId;
+
+                try {
+                        partnerUserId = (UUID) auth.getPrincipal();
+                } catch (ClassCastException e) {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid partner authentication");
+                }
+
+                // now map user -> partner app
+                return partnerUserRepo.findById(partnerUserId)
+                        .map(user -> user.getPartnerApp().getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Partner user not found"));
         }
 
 }

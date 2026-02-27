@@ -36,4 +36,6 @@ public interface PartnerAppRepository extends JpaRepository<PartnerApp, UUID> {
     ORDER BY p.createdAt DESC
 """)
     List<PartnerPendingResponse> findPendingPartnerApps();
+
+
 }

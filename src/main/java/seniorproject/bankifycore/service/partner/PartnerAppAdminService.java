@@ -21,6 +21,7 @@ import seniorproject.bankifycore.service.AccountService;
 import seniorproject.bankifycore.service.AuditService;
 import seniorproject.bankifycore.utils.ActorContext;
 import seniorproject.bankifycore.utils.ApiKeyUtils;
+import seniorproject.bankifycore.web.v1.partner.PartnerKeyVaultService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -35,6 +36,7 @@ public class PartnerAppAdminService {
     private final AccountService accountService;
     private final RotationRepository rotationRepo;
     private final AuditService auditService;
+    private final PartnerKeyVaultService keyVaultService;
 
     @Value("${security.api-key.pepper:change-me}")
     private String pepper;
@@ -162,7 +164,8 @@ public class PartnerAppAdminService {
                 "PartnerApp", app.getId().toString(),
                 "reason=admin_approve_rotation");
 
-        return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name(), apiKeyPlain);
+        keyVaultService.store(app.getId(), apiKeyPlain);
+        return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name());
     }
 
     @Transactional

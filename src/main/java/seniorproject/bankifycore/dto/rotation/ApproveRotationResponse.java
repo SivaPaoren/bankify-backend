@@ -5,6 +5,6 @@ import java.util.UUID;
 public record ApproveRotationResponse(
                 UUID requestId,
                 UUID partnerAppId,
-                String status,
-                String apiKey) {
+                String status
+                ) {
 }
