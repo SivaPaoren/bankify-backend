@@ -62,6 +62,7 @@ public class LedgerService {
     public LedgerEntryResponse toResponse(LedgerEntry ledgerEntry) {
         return new LedgerEntryResponse(
                 ledgerEntry.getId(),
+                ledgerEntry.getAccount().getId(),
                 ledgerEntry.getTransaction().getId(),
                 ledgerEntry.getDirection().name(),
                 ledgerEntry.getAmount(),

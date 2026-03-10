@@ -60,7 +60,10 @@ public class PartnerPortalAuthService {
         // ✅ (app status gate)
         var app = user.getPartnerApp();
         if (app.getStatus() == PartnerAppStatus.DISABLED || app.getStatus() == PartnerAppStatus.REJECTED) {
-            throw new IllegalStateException("Partner app is disabled");
+            throw new IllegalStateException("Partner app is disabled or rejected");
+        }
+        if (app.getStatus() == PartnerAppStatus.PENDING) {
+            throw new IllegalStateException("Partner app is pending admin approval");
         }
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
