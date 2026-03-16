@@ -1,6 +1,5 @@
 package seniorproject.bankifycore.service;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +28,6 @@ public class LedgerService {
         return accounts.stream().map(this::toResponse).toList();
     }
 
-
     @Transactional
     public List<TransactionResponse> listLatest(UUID accountId, int limit) {
         if (limit <= 0 || limit > 50) {
@@ -45,7 +43,6 @@ public class LedgerService {
                 .toList();
     }
 
-
     @Transactional(readOnly = true)
     public List<LedgerEntryResponse> listAll(String reference) {
 
@@ -58,10 +55,10 @@ public class LedgerService {
                 .toList();
     }
 
-
     public LedgerEntryResponse toResponse(LedgerEntry ledgerEntry) {
         return new LedgerEntryResponse(
                 ledgerEntry.getId(),
+                ledgerEntry.getAccount().getId(),
                 ledgerEntry.getTransaction().getId(),
                 ledgerEntry.getDirection().name(),
                 ledgerEntry.getAmount(),
@@ -69,23 +66,22 @@ public class LedgerService {
                 ledgerEntry.getCreatedAt());
     }
 
-
     private TransactionResponse toTransactionResponse(LedgerEntry e) {
         var tx = e.getTransaction();
 
         UUID fromId = tx.getFromAccount() != null ? tx.getFromAccount().getId() : null;
-        UUID toId   = tx.getToAccount()   != null ? tx.getToAccount().getId()   : null;
+        UUID toId = tx.getToAccount() != null ? tx.getToAccount().getId() : null;
 
         return new TransactionResponse(
-                tx.getId(),          // ✅ transaction id
-                tx.getType(),        // ✅ TransactionType
-                tx.getStatus(),      // ✅ TransactionStatus
-                tx.getAmount(),      // ✅ amount
-                fromId,              // ✅ fromAccountId (null for deposit if your model uses null)
-                toId,                // ✅ toAccountId   (null for withdraw if your model uses null)
-                tx.getReference(),   // ✅ reference/idempotency ref
-                tx.getNote(),        // ✅ note
-                tx.getCreatedAt()    // ✅ createdAt
+                tx.getId(), // ✅ transaction id
+                tx.getType(), // ✅ TransactionType
+                tx.getStatus(), // ✅ TransactionStatus
+                tx.getAmount(), // ✅ amount
+                fromId, // ✅ fromAccountId (null for deposit if your model uses null)
+                toId, // ✅ toAccountId (null for withdraw if your model uses null)
+                tx.getReference(), // ✅ reference/idempotency ref
+                tx.getNote(), // ✅ note
+                tx.getCreatedAt() // ✅ createdAt
         );
     }
 

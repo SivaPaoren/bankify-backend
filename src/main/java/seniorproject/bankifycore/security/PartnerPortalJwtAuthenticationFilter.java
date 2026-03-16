@@ -27,7 +27,7 @@ public class PartnerPortalJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(ApiPaths.PARTNER +"/portal/");
+        return !request.getRequestURI().contains(ApiPaths.PARTNER + "/portal/");
     }
 
     @Override

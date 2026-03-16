@@ -50,8 +50,6 @@ public class PartnerPortalController {
 
 
 
-
-
     @GetMapping("/key/retrieve")
     @PreAuthorize("hasRole('PARTNER')")
     public RotationKeyResponse getRotatedKey(Authentication auth) {

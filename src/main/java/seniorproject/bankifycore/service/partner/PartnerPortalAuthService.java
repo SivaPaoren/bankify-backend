@@ -60,7 +60,11 @@ public class PartnerPortalAuthService {
         // ✅ (app status gate)
         var app = user.getPartnerApp();
         if (app.getStatus() == PartnerAppStatus.DISABLED || app.getStatus() == PartnerAppStatus.REJECTED) {
-            throw new IllegalStateException("Partner app is disabled");
+            throw new IllegalStateException("Partner app is disabled or rejected");
+        }
+
+        if (app.getStatus() == PartnerAppStatus.PENDING) {
+            throw new IllegalStateException("Partner app is pending admin approval");
         }
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
@@ -70,15 +74,13 @@ public class PartnerPortalAuthService {
         String token = jwtTokenService.generatePartnerPortalToken(
                 user.getId(),
                 user.getEmail(),
-                user.getRole().name()
-        );
+                user.getRole().name());
 
         auditService.log(
                 "PARTNER", user.getId().toString(),
                 "PARTNER_LOGIN",
                 "PARTNER_USER", user.getId().toString(),
-                "Partner logged in successfully"
-        );
+                "Partner logged in successfully");
 
         return new PartnerLoginResponse(token);
     }

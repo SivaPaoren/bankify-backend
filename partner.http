@@ -1,4 +1,4 @@
-@base = http://localhost:8080
+@base = http://localhost:8080/finance
 
 ### Partner signup (public)
 @randomInt = 100
@@ -19,13 +19,13 @@ Content-Type: application/json
 %}
 
 ### Partner portal login (public) -> portalJwt
-@email = partner.owner+100@demo.com
+@email = stafarnhacker@gmail.com
 # @name partnerLogin
 POST {{base}}/api/v1/partner/auth/login
 Content-Type: application/json
 
 {
-  "email": "{{email}}",
+  "email": "{{partnerEmail}}",
   "password": "Passw0rd!"
 }
 
@@ -72,7 +72,7 @@ Content-Type: application/json
 
 ### Admin approve rotation -> partnerApiKey2
 # @name approveRotation
-PATCH {{base}}/api/v1/admin/portal/partner-app/rotation-requests/981c1ee2-acdc-4afc-be6e-a8002d19dfc0/approve
+PATCH {{base}}/api/v1/admin/portal/partner-app/rotation-requests/cf13d7bc-a364-4c34-9684-5b681bd218fb/approve
 Authorization: Bearer {{adminJwt}}
 
 > {%
