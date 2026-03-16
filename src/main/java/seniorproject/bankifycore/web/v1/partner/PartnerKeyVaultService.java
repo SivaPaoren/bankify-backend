@@ -11,7 +11,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartnerKeyVaultService {
 
-
     private final StringRedisTemplate redis;
     private static final Duration TTL = Duration.ofMinutes(5);
 
@@ -22,7 +21,8 @@ public class PartnerKeyVaultService {
     public String retrieve(UUID partnerAppId) {
         String redisKey = "partner:key:rotation:" + partnerAppId;
         String key = redis.opsForValue().get(redisKey);
-        if (key != null) redis.delete(redisKey); // one-time retrieval
+        // Do not delete. Let it expire naturally via TTL out of convenience for the 5
+        // minute window.
         return key;
     }
 }

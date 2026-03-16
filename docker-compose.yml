@@ -52,6 +52,14 @@ services:
 
       # optional bootstrap (ONLY set when you want to create first admin)
       # BANKIFY_BOOTSTRAP_TOKEN: "one-time-token"
+      
+  frontend:
+    build: ../bankify-frontend
+    restart: always
+    depends_on:
+      - bankify
+    ports:
+      - "3000:80"
 
 volumes:
   postgres_data:
