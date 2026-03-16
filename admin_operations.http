@@ -1,4 +1,4 @@
-@base = http://localhost:8080
+@base = http://localhost:8080/finance
 
 
 
@@ -8,8 +8,8 @@ POST {{base}}/api/v1/admin/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@bankify.com",
-  "password": "StrongPassword123!!"
+  "email": "admin@bankify.local",
+  "password": "admin123"
 }
 
 > {%
@@ -101,12 +101,12 @@ pin = 123456
 
 
 ### List client apps
-GET {{base}}/api/v1/admin/clients
+GET {{base}}/api/v1/admin/partner-apps
 Authorization: Bearer {{adminJwt}}
 
 ### Approve client -> partnerApiKey
 # @name approveClient
-PATCH {{base}}/api/v1/admin/partner-apps/981c1ee2-acdc-4afc-be6e-a8002d19dfc0/approve
+PATCH {{base}}/api/v1/admin/partner-apps/cf13d7bc-a364-4c34-9684-5b681bd218fb/approve
 Authorization: Bearer {{adminJwt}}
 
 > {%

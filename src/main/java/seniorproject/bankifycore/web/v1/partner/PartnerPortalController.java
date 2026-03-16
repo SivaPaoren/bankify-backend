@@ -13,7 +13,6 @@ import seniorproject.bankifycore.dto.rotation.RotateKeyRequest;
 import seniorproject.bankifycore.dto.rotation.RotateKeyResponse;
 import seniorproject.bankifycore.dto.rotation.RotationRequestItem;
 
-
 import seniorproject.bankifycore.service.partner.PartnerPortalService;
 
 import java.util.List;
@@ -21,13 +20,11 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(ApiPaths.PARTNER +"/portal")
+@RequestMapping(ApiPaths.PARTNER + "/portal")
 public class PartnerPortalController {
 
     private final PartnerPortalService partnerPortalService;
     private final PartnerKeyVaultService partnerKeyVaultService;
-
-
 
     // ✅ requires PARTNER_PORTAL JWT
     @GetMapping("/me")
@@ -48,10 +45,6 @@ public class PartnerPortalController {
         return partnerPortalService.myRotationRequests();
     }
 
-
-
-
-
     @GetMapping("/key/retrieve")
     @PreAuthorize("hasRole('PARTNER')")
     public RotationKeyResponse getRotatedKey(Authentication auth) {
@@ -65,17 +58,13 @@ public class PartnerPortalController {
             // either not approved, already retrieved, or TTL expired
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "No rotated key available (already retrieved or expired)"
-            );
+                    "No rotated key available (already retrieved or expired)");
         }
 
         return new RotationKeyResponse(
                 partnerAppId,
                 key,
-                "Show this once and store it safely. You won't be able to fetch it again."
-        );
+                "This key will be available to view for 5 minutes. Store it safely before it expires.");
     }
-
-
 
 }

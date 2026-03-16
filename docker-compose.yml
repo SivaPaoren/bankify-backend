@@ -37,14 +37,14 @@ services:
       SPRING_DATASOURCE_PASSWORD: bankify
 
       # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
 
       # RabbitMQ
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: bankify
-      RABBITMQ_PASSWORD: bankify
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: bankify
+      SPRING_RABBITMQ_PASSWORD: bankify
 
       # REQUIRED secrets for prod
       SECURITY_API_KEY_PEPPER: "CHANGE_ME_LONG_RANDOM"
@@ -52,6 +52,14 @@ services:
 
       # optional bootstrap (ONLY set when you want to create first admin)
       # BANKIFY_BOOTSTRAP_TOKEN: "one-time-token"
+      
+  frontend:
+    build: ../bankify-frontend
+    restart: always
+    depends_on:
+      - bankify
+    ports:
+      - "3000:80"
 
 volumes:
   postgres_data:

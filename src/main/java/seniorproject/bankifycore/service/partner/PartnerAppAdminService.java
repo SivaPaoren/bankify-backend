@@ -78,15 +78,9 @@ public class PartnerAppAdminService {
             throw new IllegalStateException("API key already issued");
         }
 
-        // generate key ONCE (store only hash)
-        String apiKeyPlain, apiKeyHash;
-        do {
-            apiKeyPlain = ApiKeyUtils.generateRawKey();
-            apiKeyHash = ApiKeyUtils.hash(apiKeyPlain, pepper);
-        } while (partnerAppRepo.existsByApiKeyHash(apiKeyHash));
-
-        app.setApiKeyHash(apiKeyHash);
+        // activate first
         app.setStatus(PartnerAppStatus.ACTIVE);
+        partnerAppRepo.save(app);
 
         // create settlement account if missing
         if (!accountRepo.existsByPartnerApp_Id(app.getId())) {
@@ -96,24 +90,49 @@ public class PartnerAppAdminService {
                     .type(AccountType.CURRENT)
                     .status(AccountStatus.ACTIVE)
                     .accountNumber(accountService.getUniqueAccountNumber())
-                    .currency(Currency.THB) // or whatever default you want
+                    .currency(Currency.THB)
                     .balance(BigDecimal.ZERO)
                     .build();
             accountRepo.save(settlement);
         }
 
-        partnerAppRepo.save(app);
-
-        // audit log is generated here
-        auditService.log(
-                ActorContext.actorType(), ActorContext.actorId(),
+        // issue key + store in vault + audit
+        issueNewApiKeyFor(
+                app,
                 "PARTNER_APP_APPROVED",
-                "PartnerApp", app.getId().toString(),
-                "status=" + app.getStatus().name());
+                "status=" + app.getStatus().name()
+        );
 
-        // Store key in vault — partner retrieves once via /partner/portal/key/retrieve
-        keyVaultService.store(app.getId(), apiKeyPlain);
         return new ApprovePartnerResponse(app.getId(), app.getStatus().name());
+    }
+
+
+
+    @Transactional
+    public ApproveRotationResponse approveRotation(UUID requestId) {
+        PartnerKeyRotationRequest r = rotationRepo.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Rotation request not found"));
+
+        if (r.getStatus() != RotationStatus.PENDING) {
+            throw new IllegalStateException("Rotation request is not pending");
+        }
+
+        PartnerApp app = r.getPartnerApp();
+        if (app.getStatus() != PartnerAppStatus.ACTIVE) {
+            throw new IllegalStateException("Partner app is not active");
+        }
+
+        // issue key + store in vault + audit
+        issueNewApiKeyFor(
+                app,
+                "PARTNER_ROTATION_APPROVED",
+                "rotationRequestId=" + r.getId()
+        );
+
+        r.setStatus(RotationStatus.APPROVED);
+        rotationRepo.save(r);
+
+        return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name());
     }
 
     @Transactional(readOnly = true)
@@ -131,19 +150,44 @@ public class PartnerAppAdminService {
     }
 
     // Here is the method that will approve , Rotation for partner
-    @Transactional
-    public ApproveRotationResponse approveRotation(UUID requestId) {
-        PartnerKeyRotationRequest r = rotationRepo.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Rotation request not found"));
+//    @Transactional
+//    public ApproveRotationResponse approveRotation(UUID requestId) {
+//        PartnerKeyRotationRequest r = rotationRepo.findById(requestId)
+//                .orElseThrow(() -> new IllegalArgumentException("Rotation request not found"));
+//
+//        if (r.getStatus() != RotationStatus.PENDING) {
+//            throw new IllegalStateException("Rotation request is not pending");
+//        }
+//
+//        PartnerApp app = r.getPartnerApp();
+//        if (app.getStatus() != PartnerAppStatus.ACTIVE) {
+//            throw new IllegalStateException("Partner app is not active");
+//        }
+//
+//        // Generate new key (plain once), store hash
+//        String apiKeyPlain, apiKeyHash;
+//        do {
+//            apiKeyPlain = ApiKeyUtils.generateRawKey();
+//            apiKeyHash = ApiKeyUtils.hash(apiKeyPlain, pepper);
+//        } while (partnerAppRepo.existsByApiKeyHash(apiKeyHash));
+//
+//        app.setApiKeyHash(apiKeyHash);
+//        partnerAppRepo.save(app);
+//
+//        r.setStatus(RotationStatus.APPROVED);
+//        rotationRepo.save(r);
+//
+//        auditService.log(
+//                ActorContext.actorType(), ActorContext.actorId(),
+//                "PARTNER_ROTATION_APPROVED",
+//                "PartnerApp", app.getId().toString(),
+//                "reason=admin_approve_rotation");
+//
+//        keyVaultService.store(app.getId(), apiKeyPlain);
+//        return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name());
+//    }
 
-        if (r.getStatus() != RotationStatus.PENDING) {
-            throw new IllegalStateException("Rotation request is not pending");
-        }
-
-        PartnerApp app = r.getPartnerApp();
-        if (app.getStatus() != PartnerAppStatus.ACTIVE) {
-            throw new IllegalStateException("Partner app is not active");
-        }
+    private void issueNewApiKeyFor(PartnerApp app, String auditAction, String auditMeta) {
 
         // Generate new key (plain once), store hash
         String apiKeyPlain, apiKeyHash;
@@ -155,17 +199,16 @@ public class PartnerAppAdminService {
         app.setApiKeyHash(apiKeyHash);
         partnerAppRepo.save(app);
 
-        r.setStatus(RotationStatus.APPROVED);
-        rotationRepo.save(r);
+        // Store key in vault (one-time retrieval via portal)
+        keyVaultService.store(app.getId(), apiKeyPlain);
 
+        // Audit
         auditService.log(
                 ActorContext.actorType(), ActorContext.actorId(),
-                "PARTNER_ROTATION_APPROVED",
+                auditAction,
                 "PartnerApp", app.getId().toString(),
-                "reason=admin_approve_rotation");
-
-        keyVaultService.store(app.getId(), apiKeyPlain);
-        return new ApproveRotationResponse(r.getId(), app.getId(), r.getStatus().name());
+                auditMeta
+        );
     }
 
     @Transactional

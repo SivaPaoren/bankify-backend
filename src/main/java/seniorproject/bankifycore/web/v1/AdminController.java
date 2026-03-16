@@ -1,6 +1,7 @@
 package seniorproject.bankifycore.web.v1;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,8 +79,9 @@ public class AdminController {
     // approving api rotation for partner
     @PatchMapping("/partner-apps/rotation-requests/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
-    public ApproveRotationResponse approveRotation(@PathVariable UUID id) {
-        return partnerAppAdminService.approveRotation(id);
+    public ResponseEntity<Void> approveRotation(@PathVariable UUID id) {
+        partnerAppAdminService.approveRotation(id);
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/partner-apps/rotation-requests/{id}/reject")

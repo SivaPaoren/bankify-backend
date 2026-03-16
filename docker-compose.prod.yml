@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: bankify
+      # CHANGE THESE SECRETS
+      POSTGRES_USER: production_db_user 
+      POSTGRES_PASSWORD: production_db_password
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    environment:
+      # CHANGE THESE SECRETS
+      RABBITMQ_DEFAULT_USER: bankify_prod_user
+      RABBITMQ_DEFAULT_PASS: bankify_prod_password
+    ports:
+      - "15672:15672" # Restrict this via firewall if possible
+
+  bankify:
+    build: .
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    ports:
+      - "8080:8080" # Consider binding to 127.0.0.1 if running behind a reverse proxy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bankify
+      SPRING_DATASOURCE_USERNAME: production_db_user
+      SPRING_DATASOURCE_PASSWORD: production_db_password
+
+      # Infrastructure
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: bankify_prod_user
+      RABBITMQ_PASSWORD: bankify_prod_password
+
+      # REQUIRED Security Secrets (Inject via a .env file locally or CI/CD secrets)
+      # DO NOT COMMIT REAL PASSWORDS TO GITHUB
+      SECURITY_API_KEY_PEPPER: "${SECURITY_API_KEY_PEPPER}"
+      SECURITY_JWT_SECRET: "${SECURITY_JWT_SECRET}"
+
+  frontend:
+    build: ../bankify-frontend
+    restart: always
+    depends_on:
+      - bankify
+    ports:
+      - "80:80"   # HTTP
+      # - "443:443" # HTTPS (requires SSL cert setup in nginx)
+
+volumes:
+  postgres_prod_data:

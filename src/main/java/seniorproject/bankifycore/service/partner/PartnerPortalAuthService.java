@@ -73,15 +73,13 @@ public class PartnerPortalAuthService {
         String token = jwtTokenService.generatePartnerPortalToken(
                 user.getId(),
                 user.getEmail(),
-                user.getRole().name()
-        );
+                user.getRole().name());
 
         auditService.log(
                 "PARTNER", user.getId().toString(),
                 "PARTNER_LOGIN",
                 "PARTNER_USER", user.getId().toString(),
-                "Partner logged in successfully"
-        );
+                "Partner logged in successfully");
 
         return new PartnerLoginResponse(token);
     }
