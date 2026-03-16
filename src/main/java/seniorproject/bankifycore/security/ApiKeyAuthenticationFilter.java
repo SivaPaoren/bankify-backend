@@ -26,7 +26,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(ApiPaths.PARTNER + "/me");
+        return !request.getServletPath().startsWith(ApiPaths.PARTNER + "/me");
     }
 
     @Override

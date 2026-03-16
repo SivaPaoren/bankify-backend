@@ -66,7 +66,7 @@ public class AtmJwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().contains(ApiPaths.ATM);
+        return !request.getServletPath().startsWith(ApiPaths.ATM);
     }
 
 }

@@ -22,18 +22,17 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartnerPortalJwtAuthenticationFilter extends OncePerRequestFilter {
 
-
     private final JwtTokenService jwtTokenService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().contains(ApiPaths.PARTNER + "/portal/");
+        return !request.getServletPath().startsWith(ApiPaths.PARTNER + "/portal/");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
@@ -56,9 +55,7 @@ public class PartnerPortalJwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             List.of(
                                     new SimpleGrantedAuthority("ROLE_PARTNER"),
-                                    new SimpleGrantedAuthority("ROLE_PARTNER_" + role)
-                            )
-                    );
+                                    new SimpleGrantedAuthority("ROLE_PARTNER_" + role)));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
 
